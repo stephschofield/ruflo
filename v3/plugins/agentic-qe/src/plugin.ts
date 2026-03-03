@@ -922,7 +922,7 @@ export class AQEPlugin implements IPlugin {
         inputSchema: {
           type: 'object',
           properties: {
-            gates: { type: 'array' },
+            gates: { type: 'array', items: { type: 'object' } },
             defaults: { type: 'string', enum: ['strict', 'standard', 'minimal'], default: 'standard' },
           },
         },

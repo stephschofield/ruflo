@@ -665,8 +665,8 @@ export const ruvectorPostgresPlugin = new PluginBuilder('ruvector-postgres', '3.
         type: 'object',
         properties: {
           layerType: { type: 'string', enum: ['gcn', 'gat', 'sage', 'gin', 'mpnn', 'edge_conv'], description: 'GNN layer type' },
-          nodes: { type: 'array', description: 'Node features' },
-          edges: { type: 'array', description: 'Edge list' },
+          nodes: { type: 'array', items: { type: 'array', items: { type: 'number' } }, description: 'Node features' },
+          edges: { type: 'array', items: { type: 'array', items: { type: 'number' } }, description: 'Edge list' },
           aggregation: { type: 'string', enum: ['mean', 'sum', 'max', 'attention'], description: 'Aggregation method' },
         },
         required: ['layerType', 'nodes', 'edges'],
@@ -685,7 +685,7 @@ export const ruvectorPostgresPlugin = new PluginBuilder('ruvector-postgres', '3.
         properties: {
           model: { type: 'string', enum: ['poincare', 'lorentz', 'klein'], description: 'Hyperbolic model' },
           operation: { type: 'string', enum: ['distance', 'exp_map', 'log_map', 'mobius_add', 'project'], description: 'Operation' },
-          vectors: { type: 'array', description: 'Input vectors' },
+          vectors: { type: 'array', items: { type: 'array', items: { type: 'number' } }, description: 'Input vectors' },
           curvature: { type: 'number', description: 'Manifold curvature (negative for hyperbolic)' },
         },
         required: ['model', 'operation', 'vectors'],

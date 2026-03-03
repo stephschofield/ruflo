@@ -253,8 +253,8 @@ export const portfolioRiskTool: MCPTool = {
   inputSchema: {
     type: 'object',
     properties: {
-      holdings: { type: 'array', description: 'Portfolio holdings with symbol, quantity, asset class' },
-      riskMetrics: { type: 'array', description: 'Risk metrics to calculate' },
+      holdings: { type: 'array', items: { type: 'object' }, description: 'Portfolio holdings with symbol, quantity, asset class' },
+      riskMetrics: { type: 'array', items: { type: 'string' }, description: 'Risk metrics to calculate' },
       confidenceLevel: { type: 'number', description: 'Confidence level for VaR (default: 0.95)' },
       horizon: { type: 'string', description: 'Time horizon for risk calculations' },
     },
@@ -390,7 +390,7 @@ export const anomalyDetectTool: MCPTool = {
   inputSchema: {
     type: 'object',
     properties: {
-      transactions: { type: 'array', description: 'Transactions to analyze' },
+      transactions: { type: 'array', items: { type: 'object' }, description: 'Transactions to analyze' },
       sensitivity: { type: 'number', description: 'Anomaly sensitivity threshold (0-1)' },
       context: { type: 'string', description: 'Detection context (fraud, aml, market_manipulation, all)' },
     },
@@ -562,7 +562,7 @@ export const marketRegimeTool: MCPTool = {
     properties: {
       marketData: { type: 'object', description: 'Market data (prices, volumes, volatility)' },
       lookbackPeriod: { type: 'number', description: 'Lookback period in trading days' },
-      regimeTypes: { type: 'array', description: 'Regime types to consider' },
+      regimeTypes: { type: 'array', items: { type: 'string' }, description: 'Regime types to consider' },
     },
     required: ['marketData'],
   },
@@ -712,7 +712,7 @@ export const complianceCheckTool: MCPTool = {
     type: 'object',
     properties: {
       entity: { type: 'string', description: 'Entity identifier' },
-      regulations: { type: 'array', description: 'Regulations to check against' },
+      regulations: { type: 'array', items: { type: 'string' }, description: 'Regulations to check against' },
       scope: { type: 'string', description: 'Scope of compliance check' },
       asOfDate: { type: 'string', description: 'As-of date for the check' },
     },
@@ -865,8 +865,8 @@ export const stressTestTool: MCPTool = {
     type: 'object',
     properties: {
       portfolio: { type: 'object', description: 'Portfolio holdings' },
-      scenarios: { type: 'array', description: 'Stress test scenarios' },
-      metrics: { type: 'array', description: 'Metrics to calculate' },
+      scenarios: { type: 'array', items: { type: 'object' }, description: 'Stress test scenarios' },
+      metrics: { type: 'array', items: { type: 'string' }, description: 'Metrics to calculate' },
     },
     required: ['portfolio', 'scenarios'],
   },

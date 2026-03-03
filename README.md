@@ -13,14 +13,14 @@
 [![Total Downloads](https://img.shields.io/npm/dt/claude-flow?style=for-the-badge&logo=npm&color=cyan&label=Total%20Downloads)](https://www.npmjs.com/package/claude-flow)
 [![ruv.io](https://img.shields.io/badge/ruv.io-AI%20Platform-green?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xMiAyQzYuNDggMiAyIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyem0wIDE4Yy00LjQyIDAtOC0zLjU4LTgtOHMzLjU4LTggOC04IDggMy41OCA4IDgtMy41OCA4LTggOHoiLz48L3N2Zz4=)](https://ruv.io)
 [![Agentics Foundation](https://img.shields.io/badge/Agentics-Foundation-crimson?style=for-the-badge&logo=openai)](https://discord.com/invite/dfxmpwkG2D)
-[![Claude Code](https://img.shields.io/badge/Claude%20Code-SDK%20Integrated-green?style=for-the-badge&logo=anthropic)](https://github.com/ruvnet/claude-flow)
+[![GitHub Copilot](https://img.shields.io/badge/GitHub%20Copilot-Native-green?style=for-the-badge&logo=github)](https://github.com/ruvnet/claude-flow)
 [![MIT License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge&logo=opensourceinitiative)](https://opensource.org/licenses/MIT)
 ---
 [![Follow @ruv](https://img.shields.io/badge/Follow%20%40ruv-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/ruv)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/in/reuvencohen/)
 [![YouTube](https://img.shields.io/badge/YouTube-Subscribe-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/@ReuvenCohen)
 
-# **Production-ready multi-agent AI orchestration for Claude Code**
+# **Production-ready multi-agent AI orchestration for GitHub Copilot**
 *Deploy 60+ specialized agents in coordinated swarms with self-learning capabilities, fault-tolerant consensus, and enterprise-grade security.*
 
 </div>
@@ -29,7 +29,7 @@
 
 ## Getting into the Flow
 
-Ruflo is a comprehensive AI agent orchestration framework that transforms Claude Code into a powerful multi-agent development platform. It enables teams to deploy, coordinate, and optimize specialized AI agents working together on complex software engineering tasks.
+Ruflo is a comprehensive AI agent orchestration framework that extends GitHub Copilot into a powerful multi-agent development platform. It enables teams to deploy, coordinate, and optimize specialized AI agents working together on complex software engineering tasks.
 
 ### Self-Learning/Self-Optimizing Agent Architecture
 
@@ -172,7 +172,7 @@ npx ruflo@latest init --wizard
 
 🔌 **Works With Any LLM** - Switch between Claude, GPT, Gemini, Cohere, or local models like Llama. Automatic failover if one provider is unavailable. Smart routing picks the cheapest option that meets quality requirements.
 
-⚡ **Plugs Into Claude Code** - Native integration via MCP (Model Context Protocol). Use ruflo commands directly in your Claude Code sessions with full tool access.
+⚡ **Plugs Into GitHub Copilot** - Native integration via MCP (Model Context Protocol). Use ruflo agents and tools directly in your VS Code Copilot sessions with full tool access.
 
 🔒 **Production-Ready Security** - Built-in protection against prompt injection, input validation, path traversal prevention, command injection blocking, and safe credential handling.
 
@@ -185,11 +185,11 @@ npx ruflo@latest init --wizard
 <details>
 <summary>🔄 <strong>Core Flow</strong> — How requests move through the system</summary>
 
-Every request flows through four layers: from your CLI or Claude Code interface, through intelligent routing, to specialized agents, and finally to LLM providers for reasoning.
+Every request flows through four layers: from your IDE or CLI interface, through intelligent routing, to specialized agents, and finally to LLM providers for reasoning.
 
 | Layer | Components | What It Does |
 |-------|------------|--------------|
-| User | Claude Code, CLI | Your interface to control and run commands |
+| User | GitHub Copilot, CLI | Your interface to control and run commands |
 | Orchestration | MCP Server, Router, Hooks | Routes requests to the right agents |
 | Agents | 60+ types | Specialized workers (coder, tester, reviewer...) |
 | Providers | Anthropic, OpenAI, Google, Ollama | AI models that power reasoning |
@@ -262,9 +262,9 @@ Background daemons handle security audits, performance optimization, and session
 </details>
 
 <details>
-<summary>🎯 <strong>Task Routing</strong> — Extend your Claude Code subscription by 250%</summary>
+<summary>🎯 <strong>Task Routing</strong> — Reduce API costs by up to 75%</summary>
 
-Smart routing skips expensive LLM calls when possible. Simple edits use WASM (free), medium tasks use cheaper models. This can extend your Claude Code usage by 250% or save significantly on direct API costs.
+Smart routing skips expensive LLM calls when possible. Simple edits use WASM (free), medium tasks use cheaper models. This can reduce your API costs by up to 75% through intelligent model selection.
 
 | Complexity | Handler | Speed |
 |------------|---------|-------|
@@ -392,12 +392,12 @@ swarm_init({
 
 </details>
 
-### Claude Code: With vs Without Ruflo
+### GitHub Copilot: With vs Without Ruflo
 
-| Capability | Claude Code Alone | Claude Code + Ruflo |
+| Capability | GitHub Copilot Alone | GitHub Copilot + Ruflo |
 |------------|-------------------|---------------------------|
-| **Agent Collaboration** | Agents work in isolation, no shared context | Agents collaborate via swarms with shared memory and consensus |
-| **Coordination** | Manual orchestration between tasks | Queen-led hierarchy with 5 consensus algorithms (Raft, Byzantine, Gossip) |
+| **Agent Collaboration** | Agents via handoffs and subagents | Agents collaborate via swarms with shared memory and consensus |
+| **Coordination** | Manual orchestration between agents | Queen-led hierarchy with 5 consensus algorithms (Raft, Byzantine, Gossip) |
 | **Hive Mind** | ⛔ Not available | 🐝 Queen-led swarms with collective intelligence, 3 queen types, 8 worker types |
 | **Consensus** | ⛔ No multi-agent decisions | Byzantine fault-tolerant voting (f < n/3), weighted, majority |
 | **Memory** | Session-only, no persistence | HNSW vector memory with sub-ms retrieval + knowledge graph |
@@ -420,14 +420,14 @@ swarm_init({
 - **Node.js 20+** (required)
 - **npm 9+** / **pnpm** / **bun** package manager
 
-**IMPORTANT**: Claude Code must be installed first:
+**IMPORTANT**: GitHub Copilot must be set up first:
+
+1. **VS Code** with [GitHub Copilot extension](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) installed
+2. An active GitHub Copilot subscription (Individual, Business, or Enterprise)
 
 ```bash
-# 1. Install Claude Code globally
-npm install -g @anthropic-ai/claude-code
-
-# 2. (Optional) Skip permissions check for faster setup
-claude --dangerously-skip-permissions
+# Verify Copilot is working in VS Code, then initialize ruflo:
+npx ruflo@latest init
 ```
 
 ### Installation
@@ -449,7 +449,7 @@ curl -fsSL https://cdn.jsdelivr.net/gh/ruvnet/claude-flow@main/scripts/install.s
 |--------|-------------|
 | `--global`, `-g` | Install globally (`npm install -g`) |
 | `--minimal`, `-m` | Skip optional deps (faster, ~15s) |
-| `--setup-mcp` | Auto-configure MCP server for Claude Code |
+| `--setup-mcp` | Auto-configure MCP server for GitHub Copilot (`.vscode/mcp.json`) |
 | `--doctor`, `-d` | Run diagnostics after install |
 | `--no-init` | Skip project initialization (init runs by default) |
 | `--full`, `-f` | Full setup: global + MCP + doctor |
@@ -504,116 +504,66 @@ npm install -g ruflo@latest --omit=optional
 ```
 
 <details>
-<summary>🤖 <strong>OpenAI Codex CLI Support</strong> — Full Codex integration with self-learning</summary>
+<summary>🤖 <strong>GitHub Copilot Agent Mode</strong> — Native agent orchestration with handoffs</summary>
 
-Ruflo supports both **Claude Code** and **OpenAI Codex CLI** via the [@claude-flow/codex](https://www.npmjs.com/package/@claude-flow/codex) package, following the [Agentics Foundation](https://agentics.org) standard.
+Ruflo provides **native GitHub Copilot integration** with 10 specialized agents, skills, and prompts available directly in your Copilot chat via `@agent-name` mentions and automatic handoffs.
 
-### Quick Start for Codex
-
-```bash
-# Initialize for Codex CLI (creates AGENTS.md instead of CLAUDE.md)
-npx ruflo@latest init --codex
-
-# Full Codex setup with all 137+ skills
-npx ruflo@latest init --codex --full
-
-# Initialize for both platforms (dual mode)
-npx ruflo@latest init --dual
-```
-
-### Platform Comparison
-
-| Feature | Claude Code | OpenAI Codex |
-|---------|-------------|--------------|
-| Config File | `CLAUDE.md` | `AGENTS.md` |
-| Skills Dir | `.claude/skills/` | `.agents/skills/` |
-| Skill Syntax | `/skill-name` | `$skill-name` |
-| Settings | `settings.json` | `config.toml` |
-| MCP | Native | Via `codex mcp add` |
-| Default Model | claude-sonnet | gpt-5.3 |
-
-### Key Concept: Execution Model
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  CLAUDE-FLOW = ORCHESTRATOR (tracks state, stores memory)       │
-│  CODEX = EXECUTOR (writes code, runs commands, implements)      │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-**Codex does the work. Claude-flow coordinates and learns.**
-
-### Dual-Mode Integration (Claude Code + Codex)
-
-Run Claude Code for interactive development and spawn headless Codex workers for parallel background tasks:
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  CLAUDE CODE (interactive)  ←→  CODEX WORKERS (headless)        │
-│  - Main conversation         - Parallel background execution    │
-│  - Complex reasoning         - Bulk code generation            │
-│  - Architecture decisions    - Test execution                   │
-│  - Final integration         - File processing                  │
-└─────────────────────────────────────────────────────────────────┘
-```
+### Quick Start for GitHub Copilot
 
 ```bash
-# Spawn parallel Codex workers from Claude Code
-claude -p "Analyze src/auth/ for security issues" --session-id "task-1" &
-claude -p "Write unit tests for src/api/" --session-id "task-2" &
-claude -p "Optimize database queries in src/db/" --session-id "task-3" &
-wait  # Wait for all to complete
+# Initialize for GitHub Copilot (creates .github/agents/, .github/skills/, .github/prompts/)
+npx ruflo@latest init
+
+# Full setup with MCP + diagnostics
+npx ruflo@latest init --full
 ```
 
-| Dual-Mode Feature | Benefit |
-|-------------------|---------|
-| Parallel Execution | 4-8x faster for bulk tasks |
-| Cost Optimization | Route simple tasks to cheaper workers |
-| Context Preservation | Shared memory across platforms |
-| Best of Both | Interactive + batch processing |
+### GitHub Copilot Configuration
 
-### Dual-Mode CLI Commands (NEW)
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| Instructions | `.github/copilot-instructions.md` | Project-level Copilot instructions |
+| Agents | `.github/agents/*.agent.md` | 10 specialized agents with frontmatter |
+| Skills | `.github/skills/*.skill.md` | 10 reusable skill definitions |
+| Prompts | `.github/prompts/*.prompt.md` | 5 prompt templates |
+| MCP Config | `.vscode/mcp.json` | MCP server connection for Copilot |
 
-```bash
-# List collaboration templates
-npx @claude-flow/codex dual templates
+### Agent Handoff Graph
 
-# Run feature development swarm (architect → coder → tester → reviewer)
-npx @claude-flow/codex dual run --template feature --task "Add user auth"
+Agents coordinate via a directed handoff graph — the coordinator delegates to specialists who can hand off to each other:
 
-# Run security audit swarm (scanner → analyzer → fixer)
-npx @claude-flow/codex dual run --template security --task "src/auth/"
-
-# Run refactoring swarm (analyzer → planner → refactorer → validator)
-npx @claude-flow/codex dual run --template refactor --task "src/legacy/"
+```
+                    ┌──────────────┐
+                    │  Coordinator │
+                    └──────┬───────┘
+         ┌─────────┬───────┼───────┬──────────┐
+         ▼         ▼       ▼       ▼          ▼
+    Researcher  Architect  Coder  Tester   Reviewer
+                    │       │       │          │
+                    └───►───┘   ┌───┘          │
+                                ▼              ▼
+                          Security-Auditor  PR-Manager
 ```
 
-### Pre-Built Collaboration Templates
+### Using Agents in Copilot Chat
 
-| Template | Pipeline | Platforms |
-|----------|----------|-----------|
-| **feature** | architect → coder → tester → reviewer | Claude + Codex |
-| **security** | scanner → analyzer → fixer | Codex + Claude |
-| **refactor** | analyzer → planner → refactorer → validator | Claude + Codex |
+In VS Code Copilot chat, mention an agent to invoke it:
 
-### MCP Integration for Codex
-
-When you run `init --codex`, the MCP server is automatically registered:
-
-```bash
-# Verify MCP is registered
-codex mcp list
-
-# If not present, add manually:
-codex mcp add ruflo -- npx ruflo mcp start
 ```
+@coordinator Plan and implement user authentication with OAuth
+@coder Implement the login endpoint following the architect's design
+@tester Write integration tests for the auth module
+@reviewer Review the PR for security issues
+```
+
+Agents automatically hand off to the next specialist in the workflow.
 
 ### Self-Learning Workflow
 
 ```
 1. LEARN:   memory_search(query="task keywords") → Find similar patterns
 2. COORD:   swarm_init(topology="hierarchical") → Set up coordination
-3. EXECUTE: YOU write code, run commands       → Codex does real work
+3. EXECUTE: Agents write code via handoffs     → Copilot does real work
 4. REMEMBER: memory_store(key, value, namespace="patterns") → Save for future
 ```
 
@@ -622,7 +572,6 @@ The **Intelligence Loop** (ADR-050) automates this cycle through hooks. Each ses
 - Injects ranked context into every route decision
 - Tracks edit patterns and generates new insights
 - Boosts confidence for useful patterns, decays unused ones
-- Saves snapshots so you can track improvement with `node .claude/helpers/hook-handler.cjs stats`
 
 ### MCP Tools for Learning
 
@@ -633,18 +582,6 @@ The **Intelligence Loop** (ADR-050) automates this cycle through hooks. Each ses
 | `swarm_init` | Initialize coordination | Start of complex tasks |
 | `agent_spawn` | Register agent roles | Multi-agent workflows |
 | `neural_train` | Train on patterns | Periodic improvement |
-
-### 137+ Skills Available
-
-| Category | Examples |
-|----------|----------|
-| **V3 Core** | `$v3-security-overhaul`, `$v3-memory-unification`, `$v3-performance-optimization` |
-| **AgentDB** | `$agentdb-vector-search`, `$agentdb-optimization`, `$agentdb-learning` |
-| **Swarm** | `$swarm-orchestration`, `$swarm-advanced`, `$hive-mind-advanced` |
-| **GitHub** | `$github-code-review`, `$github-workflow-automation`, `$github-multi-repo` |
-| **SPARC** | `$sparc-methodology`, `$sparc:architect`, `$sparc:coder`, `$sparc:tester` |
-| **Flow Nexus** | `$flow-nexus-neural`, `$flow-nexus-swarm`, `$flow-nexus:workflow` |
-| **Dual-Mode** | `$dual-spawn`, `$dual-coordinate`, `$dual-collect` |
 
 ### Vector Search Details
 
@@ -663,7 +600,7 @@ The **Intelligence Loop** (ADR-050) automates this cycle through hooks. Each ses
 # Initialize project
 npx ruflo@latest init
 
-# Start MCP server for Claude Code integration
+# Start MCP server for GitHub Copilot integration
 npx ruflo@latest mcp start
 
 # Run a task with agents
@@ -685,19 +622,27 @@ npx ruflo@v3alpha init upgrade --add-missing
 
 The `--add-missing` flag automatically detects and installs new skills, agents, and commands that were added in newer versions, without overwriting your existing customizations.
 
-### Claude Code MCP Integration
+### GitHub Copilot MCP Integration
 
 Add ruflo as an MCP server for seamless integration:
 
 ```bash
-# Add ruflo MCP server to Claude Code
-claude mcp add ruflo -- npx -y ruflo@latest mcp start
+# Add ruflo MCP server — creates .vscode/mcp.json
+npx ruflo@latest init --setup-mcp
 
-# Verify installation
-claude mcp list
+# Or manually add to .vscode/mcp.json:
+# {
+#   "servers": {
+#     "ruflo": {
+#       "type": "stdio",
+#       "command": "npx",
+#       "args": ["ruflo", "mcp", "start"]
+#     }
+#   }
+# }
 ```
 
-Once added, Claude Code can use all 175+ ruflo MCP tools directly:
+Once configured, GitHub Copilot can use all 175+ ruflo MCP tools directly:
 - `swarm_init` - Initialize agent swarms
 - `agent_spawn` - Spawn specialized agents
 - `memory_search` - Search patterns with HNSW vector search
@@ -863,7 +808,7 @@ Complex projects fail when implementation drifts from the original plan. Ruflo s
 - **ADR-008**: Vitest testing framework (10x faster than Jest)
 - **ADR-009**: Hybrid Memory Backend (SQLite + HNSW)
 - **ADR-026**: Intelligent 3-tier model routing
-- **ADR-048**: Auto Memory Bridge (Claude Code ↔ AgentDB bidirectional sync)
+- **ADR-048**: Auto Memory Bridge (Copilot ↔ AgentDB bidirectional sync)
 - **ADR-049**: Self-Learning Memory with GNN (LearningBridge, MemoryGraph, AgentMemoryScope)
 
 </details>
@@ -878,7 +823,7 @@ Complex projects fail when implementation drifts from the original plan. Ruflo s
 ```mermaid
 flowchart TB
     subgraph User["👤 User Layer"]
-        CC[Claude Code]
+        CC[GitHub Copilot]
         CLI[CLI Commands]
     end
 
@@ -1012,7 +957,7 @@ flowchart LR
 | **LearningBridge** | Connects insights to SONA/ReasoningBank neural pipeline | 0.12 ms/insight |
 | **MemoryGraph** | PageRank + label propagation knowledge graph | 2.78 ms build (1k nodes) |
 | **AgentMemoryScope** | 3-scope agent memory (project/local/user) with cross-agent transfer | 1.25 ms transfer |
-| **AutoMemoryBridge** | Bidirectional sync: Claude Code auto memory files ↔ AgentDB | ADR-048 |
+| **AutoMemoryBridge** | Bidirectional sync: Copilot agent memory ↔ AgentDB | ADR-048 |
 
 </details>
 
@@ -1214,10 +1159,10 @@ Restart Claude Desktop after saving. Look for the MCP indicator (hammer icon) in
 </details>
 
 <details>
-<summary>⌨️ <strong>Claude Code (CLI)</strong></summary>
+<summary>⌨️ <strong>Claude Code (CLI)</strong> — Alternative platform</summary>
 
 ```bash
-# Add via CLI (recommended)
+# Add via Claude Code CLI
 claude mcp add ruflo -- npx ruflo@v3alpha mcp start
 
 # Or add with environment variables
@@ -1453,17 +1398,17 @@ echo "ANTHROPIC_API_KEY=sk-ant-..." >> .env
 ---
 
 <details>
-<summary>🛡️ <strong>@claude-flow/guidance</strong> — Long-horizon governance control plane for Claude Code agents</summary>
+<summary>🛡️ <strong>@claude-flow/guidance</strong> — Long-horizon governance control plane for AI agents</summary>
 
 ### Overview
 
-`@claude-flow/guidance` turns `CLAUDE.md` into a runtime governance system with enforcement gates, cryptographic proofs, and feedback loops. Agents that normally drift after 30 minutes can now operate for days — rules are enforced mechanically at every step, not remembered by the model.
+`@claude-flow/guidance` turns project instructions into a runtime governance system with enforcement gates, cryptographic proofs, and feedback loops. Agents that normally drift after 30 minutes can now operate for days — rules are enforced mechanically at every step, not remembered by the model.
 
 **7-phase pipeline:** Compile → Retrieve → Enforce → Trust → Prove → Defend → Evolve
 
 | Capability | Description |
 |-----------|-------------|
-| **Compile** | Parses `CLAUDE.md` into typed policy bundles (constitution + task-scoped shards) |
+| **Compile** | Parses project instructions into typed policy bundles (constitution + task-scoped shards) |
 | **Retrieve** | Intent-classified shard retrieval with semantic similarity and risk filters |
 | **Enforce** | 4 gates the model cannot bypass (destructive ops, tool allowlist, diff size, secrets) |
 | **Trust** | Per-agent trust accumulation with privilege tiers and coherence-driven throttling |
@@ -1488,7 +1433,7 @@ import {
   createProofChain,
 } from '@claude-flow/guidance';
 
-// Compile CLAUDE.md into a policy bundle
+// Compile project instructions into a policy bundle
 const compiler = createCompiler();
 const bundle = await compiler.compile(claudeMdText);
 
@@ -1515,7 +1460,7 @@ chain.verify(envelope); // true — tamper-evident
 | Import Path | Purpose |
 |-------------|---------|
 | `@claude-flow/guidance` | Main entry — GuidanceControlPlane |
-| `@claude-flow/guidance/compiler` | CLAUDE.md → PolicyBundle compiler |
+| `@claude-flow/guidance/compiler` | Project instructions → PolicyBundle compiler |
 | `@claude-flow/guidance/retriever` | Intent classification + shard retrieval |
 | `@claude-flow/guidance/gates` | 4 enforcement gates |
 | `@claude-flow/guidance/ledger` | Run event logging + evaluators |
@@ -1524,7 +1469,7 @@ chain.verify(envelope); // true — tamper-evident
 | `@claude-flow/guidance/trust` | Trust accumulation + privilege tiers |
 | `@claude-flow/guidance/authority` | Human authority + irreversibility classification |
 | `@claude-flow/guidance/wasm-kernel` | WASM-accelerated security-critical paths |
-| `@claude-flow/guidance/analyzer` | CLAUDE.md quality analysis + A/B benchmarking |
+| `@claude-flow/guidance/analyzer` | Policy quality analysis + A/B benchmarking |
 | `@claude-flow/guidance/conformance-kit` | Headless conformance test runner |
 
 ### Stats
@@ -1635,20 +1580,18 @@ npx ruflo hive-mind sessions                # List active sessions
 </details>
 
 <details>
-<summary>👥 <strong>Agent Teams</strong> — Claude Code multi-instance coordination</summary>
+<summary>👥 <strong>Agent Teams</strong> — Multi-agent coordination via Copilot</summary>
 
-Native integration with Claude Code's experimental Agent Teams feature for spawning and coordinating multiple Claude instances.
+Integration with multi-agent coordination for spawning and managing multiple specialized agents.
 
 **Enable Agent Teams:**
 ```bash
 # Automatically enabled with ruflo init
 npx ruflo@latest init
 
-# Or manually add to .claude/settings.json
+# Or manually add to .vscode/settings.json
 {
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
-  }
+  "github.copilot.chat.agent.enabled": true
 }
 ```
 
@@ -1781,7 +1724,7 @@ Install these optional plugins to extend Ruflo capabilities:
 | **@claude-flow/plugin-agentic-qe** | 3.0.0-alpha.2 | Quality Engineering with 58 AI agents across 12 DDD contexts. TDD, coverage analysis, security scanning, chaos engineering, accessibility testing. | `npm install @claude-flow/plugin-agentic-qe` |
 | **@claude-flow/plugin-prime-radiant** | 0.1.4 | Mathematical AI interpretability with 6 engines: sheaf cohomology, spectral analysis, causal inference, quantum topology, category theory, HoTT proofs. | `npm install @claude-flow/plugin-prime-radiant` |
 | **@claude-flow/plugin-gastown-bridge** | 0.1.0 | Gas Town orchestrator integration with WASM-accelerated formula parsing (352x faster), Beads sync, convoy management, and graph analysis. 20 MCP tools. | `npx ruflo@latest plugins install -n @claude-flow/plugin-gastown-bridge` |
-| **@claude-flow/teammate-plugin** | 1.0.0-alpha.1 | Native TeammateTool integration for Claude Code v2.1.19+. BMSSP WASM acceleration, rate limiting, circuit breaker, semantic routing. 21 MCP tools. | `npx ruflo@latest plugins install -n @claude-flow/teammate-plugin` |
+| **@claude-flow/teammate-plugin** | 1.0.0-alpha.1 | Native TeammateTool integration for multi-agent coordination. BMSSP WASM acceleration, rate limiting, circuit breaker, semantic routing. 21 MCP tools. | `npx ruflo@latest plugins install -n @claude-flow/teammate-plugin` |
 
 #### 🏥 Domain-Specific Plugins
 
@@ -1823,7 +1766,7 @@ Install these optional plugins to extend Ruflo capabilities:
 - Hallucination prevention via consensus verification
 
 **Teammate Plugin Features:**
-- Native TeammateTool integration for Claude Code v2.1.19+
+- Native TeammateTool integration for multi-agent coordination
 - 21 MCP tools: `teammate/spawn`, `teammate/coordinate`, `teammate/broadcast`, `teammate/discover-teams`, `teammate/route-task`, etc.
 - BMSSP WASM acceleration for topology optimization (352x faster)
 - Rate limiting with sliding window (configurable limits)
@@ -2476,13 +2419,13 @@ npx ruflo hive-mind status                                  # Check status
 </details>
 
 <details>
-<summary>📊 <strong>V3 Statusline</strong> — Real-time development status for Claude Code</summary>
+<summary>📊 <strong>V3 Statusline</strong> — Real-time development status display</summary>
 
-Real-time development status display integrated directly into Claude Code's status bar. Shows DDD progress, swarm activity, security status, AgentDB metrics, and live session data (model, context usage, cost).
+Real-time development status display for IDE integration. Shows DDD progress, swarm activity, security status, AgentDB metrics, and live session data (model, context usage, cost).
 
 **How It Works:**
 
-Claude Code pipes JSON session data via **stdin** to the statusline script after each assistant message (debounced ~300ms). The script reads this data and combines it with local project metrics to produce a single-line status output.
+The statusline script reads session data and combines it with local project metrics to produce a single-line status output.
 
 **Output Format:**
 ```
@@ -2522,7 +2465,7 @@ The generated config uses a **fast local script** (no `npx` cold-start):
 }
 ```
 
-> **Note:** Only `type`, `command`, and `padding` are valid statusLine fields. Do not add `refreshMs`, `enabled`, or other fields — Claude Code will ignore them.
+> **Note:** Only `type`, `command`, and `padding` are valid statusLine fields. Do not add `refreshMs`, `enabled`, or other fields — the runtime will ignore them.
 
 **For Existing Users:**
 
@@ -2535,7 +2478,7 @@ This removes invalid config fields and regenerates the statusline helper with st
 
 **Stdin JSON Protocol:**
 
-Claude Code provides session data via stdin in this format:
+The runtime provides session data via stdin in this format:
 ```json
 {
   "model": { "display_name": "Opus 4.6" },
@@ -2549,7 +2492,7 @@ Claude Code provides session data via stdin in this format:
 The statusline script reads stdin synchronously, falls back to local detection when run manually (TTY mode).
 
 **Data Sources:**
-- **Stdin JSON** — Model name, context %, cost, duration (from Claude Code)
+- **Stdin JSON** — Model name, context %, cost, duration (from runtime)
 - `.claude-flow/metrics/v3-progress.json` — DDD domain progress
 - `.claude-flow/metrics/swarm-activity.json` — Active agent counts
 - `.claude-flow/security/audit-status.json` — CVE remediation status
@@ -2918,14 +2861,14 @@ Real-world scenarios and pre-built workflows for common tasks.
 
 ## 🧠 Infinite Context & Memory Optimization
 
-Ruflo eliminates Claude Code's context window ceiling with a real-time memory management system that archives, optimizes, and restores conversation context automatically.
+Ruflo eliminates the context window ceiling with a real-time memory management system that archives, optimizes, and restores conversation context automatically.
 
 <details>
 <summary>♾️ <strong>Context Autopilot</strong> — Never lose context to compaction again</summary>
 
 ### The Problem
 
-Claude Code has a finite context window (~200K tokens). When full, it **compacts** — summarizing the conversation and discarding details like exact file paths, tool outputs, decision reasoning, and code snippets. This creates a "context cliff" where Claude loses the ability to reference earlier work.
+AI coding assistants have a finite context window (~200K tokens). When full, they **compact** — summarizing the conversation and discarding details like exact file paths, tool outputs, decision reasoning, and code snippets. This creates a "context cliff" where the assistant loses the ability to reference earlier work.
 
 ### The Solution: Context Autopilot (ADR-051)
 
