@@ -11,8 +11,8 @@
 
 | Phase | Description | Tasks | Status |
 |-------|-------------|-------|--------|
-| **Phase 1** | Foundation (Core Infrastructure) | 5 | Not Started |
-| **Phase 2** | Agent Conversion (All 60+ Agents) | 4 | Not Started |
+| **Phase 1** | Foundation (Core Infrastructure) | 5 | In Progress (1/5) |
+| **Phase 2** | Agent Conversion (All 60+ Agents) | 4 | In Progress (1/4) |
 | **Phase 3** | Configuration Generation | 5 | Not Started |
 | **Phase 4** | MCP Tool Curation | 3 | Not Started |
 | **Phase 5** | Integration & Cleanup | 5 | Not Started |
@@ -29,16 +29,16 @@ Replace platform coupling in the CLI service layer. This is the structural work 
 
 ### Task 1.1 — Remove V2 legacy codebase
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[x]` **Complete** (2026-03-03)
 - **Priority:** P0 — Can start immediately, no dependencies
 - **Scope:** Delete `v2/` directory (~6,440 files)
 - **Why:** Dead weight — not published, not imported by V3, not relevant to Copilot rebuild
 
 **Acceptance Criteria:**
-- [ ] `v2/` directory fully removed
-- [ ] No remaining imports or references to V2 code in V3 packages
-- [ ] Build/lint/tests still pass after removal
-- [ ] Root `.npmignore` V2 exclusions cleaned up
+- [x] `v2/` directory fully removed
+- [x] No remaining imports or references to V2 code in V3 packages
+- [x] Build/lint/tests still pass after removal (pre-existing TS errors unrelated to V2)
+- [x] Root `.npmignore` V2 exclusions cleaned up
 
 **Files:**
 - `v2/` (entire directory — delete)
@@ -159,7 +159,7 @@ Convert every agent definition from Claude Code format to Copilot-native format.
 
 ### Task 2.1 — Agent frontmatter conversion
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[x]` **Complete** (2026-03-03)
 - **Priority:** P0
 - **Depends on:** Nothing (can start in parallel with Phase 1)
 - **Scope:** Convert all `.claude/agents/*.md` → `.github/agents/*.agent.md` with Copilot frontmatter
@@ -186,14 +186,23 @@ argument-hint: <placeholder text for chat input>
 ```
 
 **Acceptance Criteria:**
-- [ ] All 60+ agents converted to `.github/agents/*.agent.md` format
-- [ ] Each agent has proper `tools`, `agents`, `handoffs`, `model` fields
-- [ ] Agent body content updated — remove Claude Code-specific MCP invocation examples
-- [ ] Replace `mcp__claude-flow__*` patterns with generic tool usage
+- [x] All 60+ agents converted to `.github/agents/*.agent.md` format (88 converted + 10 originals = 98 total)
+- [x] Each agent has proper `tools`, `agents`, `handoffs`, `model` fields
+- [x] Agent body content updated — remove Claude Code-specific MCP invocation examples
+- [x] Replace `mcp__claude-flow__*` patterns with generic tool usage
+
+**Completion Notes:**
+- Conversion script: `scripts/convert-agents.py`
+- 29 infrastructure agents flagged `user-invokable: false` / `disable-model-invocation: true`
+- Category-specific handoffs applied (GitHub→coder, SPARC→pipeline, consensus→coordinator)
+- Sub-agent delegation via `agents:` field for delegator agents
+- 5 YAML-only agents have frontmatter only (no body in source)
+- 10 original hand-crafted agents preserved, line-endings normalized to LF
 
 **Files:**
-- `.claude/agents/*.md` (source — 90 files)
-- `.github/agents/*.agent.md` (target — 90 files)
+- `.claude/agents/*.md` (source — 110 files)
+- `.github/agents/*.agent.md` (target — 98 files)
+- `scripts/convert-agents.py` (new — conversion script)
 
 ---
 

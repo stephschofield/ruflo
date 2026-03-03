@@ -34,9 +34,6 @@
 .DS_Store
 Thumbs.db
 
-# V2 legacy (not needed in npm package)
-v2/
-
 # Development docs
 docs/
 *.md
