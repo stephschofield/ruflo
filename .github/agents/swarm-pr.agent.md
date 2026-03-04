@@ -6,15 +6,18 @@ model:
   - gpt-4.1
 tools:
   - ruflo
+  - agent
 agents:
   - reviewer
   - security-auditor
 handoffs:
   - agent: coder
-    trigger: When PR review identifies code changes needed
+    label: PR review identifies code changes needed
+    prompt: PR review identifies code changes needed
   - agent: coordinator
-    trigger: When PR requires broader coordination
-user-invokable: true
+    label: PR requires broader coordination
+    prompt: PR requires broader coordination
+user-invocable: true
 disable-model-invocation: false
 ---
 

@@ -8,8 +8,9 @@ tools:
   - ruflo
 handoffs:
   - agent: pseudocode
-    trigger: When specification is complete and ready for pseudocode design
-user-invokable: true
+    label: Specification is complete and ready for pseudoc...
+    prompt: specification is complete and ready for pseudocode design
+user-invocable: true
 disable-model-invocation: false
 ---
 

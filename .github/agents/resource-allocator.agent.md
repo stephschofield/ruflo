@@ -8,8 +8,9 @@ tools:
   - ruflo
 handoffs:
   - agent: coordinator
-    trigger: When task completes or needs broader coordination
-user-invokable: false
+    label: Task completes or needs broader coordination
+    prompt: task completes or needs broader coordination
+user-invocable: false
 disable-model-invocation: true
 ---
 

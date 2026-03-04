@@ -8,8 +8,9 @@ tools:
   - ruflo
 handoffs:
   - agent: coordinator
-    trigger: When security operation completes or requires escalation
-user-invokable: false
+    label: Security operation completes or requires escala...
+    prompt: security operation completes or requires escalation
+user-invocable: false
 disable-model-invocation: true
 ---
 

@@ -8,8 +8,9 @@ tools:
   - ruflo
 handoffs:
   - agent: architecture
-    trigger: When pseudocode is complete and ready for architecture design
-user-invokable: true
+    label: Pseudocode is complete and ready for architectu...
+    prompt: pseudocode is complete and ready for architecture design
+user-invocable: true
 disable-model-invocation: false
 ---
 

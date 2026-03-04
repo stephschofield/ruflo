@@ -8,10 +8,15 @@ model:
   - gpt-4.1
 handoffs:
   - agent: coder
-    trigger: When tests fail and code needs fixes
+    label: Code fixes needed
+    prompt: Tests fail and code needs fixes
+  - agent: reviewer
+    label: Ready for code review
+    prompt: Tests pass and implementation needs code review
   - agent: coordinator
-    trigger: When testing reveals scope issues or blockers
-user-invokable: true
+    label: Scope issues or blockers
+    prompt: Testing reveals scope issues or blockers
+user-invocable: true
 argument-hint: Describe what you want to test or validate...
 ---
 

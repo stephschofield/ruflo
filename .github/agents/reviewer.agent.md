@@ -8,10 +8,15 @@ model:
   - gpt-4.1
 handoffs:
   - agent: coder
-    trigger: When review finds issues that need fixing
+    label: Code fixes needed
+    prompt: Review finds issues that need fixing
+  - agent: security-auditor
+    label: Security audit needed
+    prompt: Review reveals security concerns needing deeper audit
   - agent: coordinator
-    trigger: When review reveals systemic problems or scope issues
-user-invokable: true
+    label: Systemic problems found
+    prompt: Review reveals systemic problems or scope issues
+user-invocable: true
 argument-hint: Describe what code or changes you want reviewed...
 ---
 

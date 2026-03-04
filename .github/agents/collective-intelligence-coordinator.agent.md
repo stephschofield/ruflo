@@ -6,12 +6,14 @@ model:
   - gpt-4.1
 tools:
   - ruflo
+  - agent
 agents:
   - "*"
 handoffs:
   - agent: coordinator
-    trigger: When collective intelligence operation completes
-user-invokable: false
+    label: Collective intelligence operation completes
+    prompt: collective intelligence operation completes
+user-invocable: false
 disable-model-invocation: true
 ---
 

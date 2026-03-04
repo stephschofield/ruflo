@@ -6,6 +6,7 @@ model:
   - gpt-4.1
 tools:
   - ruflo
+  - agent
 agents:
   - coder
   - tester
@@ -13,8 +14,9 @@ agents:
   - researcher
 handoffs:
   - agent: coordinator
-    trigger: When swarm topology management completes
-user-invokable: false
+    label: Swarm topology management completes
+    prompt: swarm topology management completes
+user-invocable: false
 disable-model-invocation: true
 ---
 

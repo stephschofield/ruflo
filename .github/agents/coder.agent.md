@@ -8,12 +8,15 @@ model:
   - gpt-4.1
 handoffs:
   - agent: tester
-    trigger: When implementation is complete and needs test coverage
+    label: Implementation is complete and needs test coverage
+    prompt: implementation is complete and needs test coverage
   - agent: reviewer
-    trigger: When code is ready for review
+    label: Code is ready for review
+    prompt: code is ready for review
   - agent: coordinator
-    trigger: When scope changes or blockers arise
-user-invokable: true
+    label: Scope changes or blockers arise
+    prompt: scope changes or blockers arise
+user-invocable: true
 argument-hint: Describe what you want to implement...
 ---
 

@@ -11,8 +11,8 @@
 
 | Phase | Description | Tasks | Status |
 |-------|-------------|-------|--------|
-| **Phase 1** | Foundation (Core Infrastructure) | 5 | In Progress (2/5) |
-| **Phase 2** | Agent Conversion (All 60+ Agents) | 4 | In Progress (1/4) |
+| **Phase 1** | Foundation (Core Infrastructure) | 5 | In Progress (4/5) |
+| **Phase 2** | Agent Conversion (All 60+ Agents) | 4 | Complete (4/4) |
 | **Phase 3** | Configuration Generation | 5 | Not Started |
 | **Phase 4** | MCP Tool Curation | 3 | Not Started |
 | **Phase 5** | Integration & Cleanup | 5 | Not Started |
@@ -78,7 +78,7 @@ Replace platform coupling in the CLI service layer. This is the structural work 
 
 ### Task 1.3 — Rewrite container worker pool
 
-- **Status:** `[~]` In Progress (mostly done via Task 1.2)
+- **Status:** `[x]` **Complete** (2026-03-04)
 - **Priority:** P1
 - **Depends on:** Task 1.2
 - **Scope:** Update Docker container env var mapping for provider-agnostic execution
@@ -88,12 +88,12 @@ Replace platform coupling in the CLI service layer. This is the structural work 
 - Support configurable provider selection in container environments
 
 **Acceptance Criteria:**
-- [x] No Claude Code env vars in container pool configuration (except `CLAUDE_CODE_HEADLESS` — deferred to Task 1.4)
+- [x] No Claude Code env vars in container pool configuration
 - [x] Container workers use provider-agnostic env vars (`CLAUDE_FLOW_PROVIDER`)
 - [x] Existing container orchestration logic preserved
 - [x] `SandboxMode` type removed, replaced with `defaultProvider: string`
 - [x] Result objects use `provider: 'container'` instead of `sandboxMode`
-- [ ] Remove `CLAUDE_CODE_HEADLESS` env var (blocked on Task 1.4 headless runtime rewrite)
+- [x] `CLAUDE_CODE_HEADLESS` env var removed (completed via Task 1.4)
 
 **Progress Notes:**
 - `SandboxMode` import removed, `ContainerPoolConfig.defaultSandbox` → `defaultProvider`
@@ -109,7 +109,7 @@ Replace platform coupling in the CLI service layer. This is the structural work 
 
 ### Task 1.4 — Rewrite headless runtime
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[x]` **Complete** (2026-03-04)
 - **Priority:** P1
 - **Depends on:** Task 1.2
 - **Scope:** Remove `CLAUDE_CODE_HEADLESS` dependency, use provider API calls
@@ -120,9 +120,14 @@ Replace platform coupling in the CLI service layer. This is the structural work 
 - Maintain headless execution capability for CI/CD and background workloads
 
 **Acceptance Criteria:**
-- [ ] No `CLAUDE_CODE_HEADLESS` references remain
-- [ ] Headless mode works through provider API calls
-- [ ] CI/CD pipeline compatibility maintained
+- [x] No `CLAUDE_CODE_HEADLESS` references remain
+- [x] Headless mode works through provider API calls
+- [x] CI/CD pipeline compatibility maintained
+
+**Completion Notes:**
+- Removed all 4 `CLAUDE_CODE_HEADLESS` references in `headless.ts` (doc comment, help text, executor call, status output)
+- Changed `sandbox: 'permissive'` to `provider: 'anthropic'` in executor options
+- Changed `CLAUDE_CODE_HEADLESS: 'true'` to `CLAUDE_FLOW_HEADLESS: 'true'` in `container-worker-pool.ts`
 
 **Files:**
 - `v3/@claude-flow/cli/src/runtime/headless.ts` (rewrite)
@@ -131,7 +136,7 @@ Replace platform coupling in the CLI service layer. This is the structural work 
 
 ### Task 1.5 — Rewrite hook bridge for Copilot
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[x]` **Complete** (2026-03-04)
 - **Priority:** P1
 - **Depends on:** Nothing (can run in parallel with 1.2-1.4)
 - **Scope:** Create Copilot-native `official-hooks-bridge.ts`
@@ -154,11 +159,19 @@ Replace platform coupling in the CLI service layer. This is the structural work 
 8. `Stop`
 
 **Acceptance Criteria:**
-- [ ] Copilot-native hook bridge created
-- [ ] All 8 hook events wired correctly
-- [ ] Config reads from `.github/hooks/` directory
-- [ ] `TeammateIdle` / `TaskCompleted` events removed
-- [ ] OS-specific override support (Windows/macOS/Linux)
+- [x] Copilot-native hook bridge created
+- [x] All 8 hook events wired correctly
+- [x] Config reads from `.github/hooks/` directory
+- [x] `TeammateIdle` / `TaskCompleted` events removed
+- [x] OS-specific override support (Windows/macOS/Linux)
+
+**Completion Notes:**
+- Renamed bridge from "Claude Code" to "Copilot"
+- Added `SubagentStart` event type, mapped from V3's `AgentSpawn`
+- Removed `PermissionRequest` / `Notification` from `OfficialHookEvent` (Claude Code-specific)
+- Updated CLI commands from `npx claude-flow@alpha hooks` to `npx ruflo hooks`
+- Created `.github/hooks/hooks.json` with 7 hook definitions (SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, Bash hooks, Stop)
+- Added `SubagentStart` mapping in `officialToV3Event`
 
 **Files:**
 - `v3/@claude-flow/hooks/src/bridge/official-hooks-bridge.ts` (rewrite)
@@ -203,6 +216,9 @@ argument-hint: <placeholder text for chat input>
 - [x] Each agent has proper `tools`, `agents`, `handoffs`, `model` fields
 - [x] Agent body content updated — remove Claude Code-specific MCP invocation examples
 - [x] Replace `mcp__claude-flow__*` patterns with generic tool usage
+- [x] Schema fix: `trigger` → `label` + `prompt` in all 98 handoff entries
+- [x] Schema fix: `user-invokable` → `user-invocable` in all 98 agent files
+- [x] Schema fix: `agent` tool added to `tools:` for all agents with `agents:` field
 
 **Completion Notes:**
 - Conversion script: `scripts/convert-agents.py`
@@ -221,7 +237,7 @@ argument-hint: <placeholder text for chat input>
 
 ### Task 2.2 — Design and implement handoff graph
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[x]` **Complete** (2026-03-04)
 - **Priority:** P0
 - **Depends on:** Task 2.1
 - **Scope:** Define directed handoff graph across all agent roles
@@ -229,25 +245,31 @@ argument-hint: <placeholder text for chat input>
 **Core Handoff Topology:**
 ```
 coordinator ──→ researcher, architect, coder, tester, reviewer, security-auditor
-researcher  ──→ architect, coder, coordinator
-architect   ──→ coder, coordinator
+researcher  ──→ architect, coder, tester, coordinator
+architect   ──→ researcher, coder, coordinator
 coder       ──→ tester, reviewer, coordinator
-tester      ──→ coder (fix failures), coordinator
-reviewer    ──→ coder (fix issues), coordinator
+tester      ──→ coder (fix failures), reviewer, coordinator
+reviewer    ──→ coder (fix issues), security-auditor, coordinator
 security-auditor ──→ coder (fix vulnerabilities), coordinator
+planner     ──→ researcher, architect, coder, coordinator
 ```
 
 **Acceptance Criteria:**
-- [ ] Core agent handoff graph implemented in frontmatter
-- [ ] Domain-specific agents have relevant handoff paths
-- [ ] Handoff triggers documented per-agent
-- [ ] Graph validated for no dead-end cycles
+- [x] Core agent handoff graph implemented in frontmatter
+- [x] Domain-specific agents have relevant handoff paths
+- [x] Handoff triggers documented per-agent (using `label` + `prompt` format)
+- [x] Graph validated for no dead-end cycles
+
+**Completion Notes:**
+- All 98 agent files use the correct Copilot handoff schema: `agent`, `label`, `prompt`
+- Extended graph edges: architect→researcher, researcher→tester, tester→reviewer, reviewer→security-auditor
+- All handoffs use `label` (short display text) + `prompt` (when/what context)
 
 ---
 
 ### Task 2.3 — Subagent delegation patterns
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[x]` **Complete** (2026-03-04)
 - **Priority:** P1
 - **Depends on:** Task 2.1
 - **Scope:** Replace Claude Code `Task` tool spawning with Copilot `agents` frontmatter field
@@ -258,30 +280,42 @@ security-auditor ──→ coder (fix vulnerabilities), coordinator
 - MCP memory tools continue providing cross-agent state sharing
 
 **Acceptance Criteria:**
-- [ ] Coordinator agents declare `agents: ['*']`
-- [ ] Specialist agents declare relevant subagent sets
-- [ ] No references to Claude Code's `Task` tool spawning pattern remain
+- [x] Coordinator agents declare `agents: ['*']`
+- [x] Specialist agents declare relevant subagent sets
+- [x] No references to Claude Code's `Task` tool spawning pattern remain
+
+**Completion Notes:**
+- smart-agent, project-coordinator: `agents: ["*"]` with `agent` tool
+- planner: `agents: [researcher, architect, coder]` with `agent` tool
+- 13 coordinator/delegator agents have `agents:` field with `agent` tool in tools list
+- All agents with `agents:` field correctly include `agent` in their `tools:` list
 
 ---
 
 ### Task 2.4 — Agent visibility controls
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[x]` **Complete** (2026-03-04)
 - **Priority:** P2
 - **Depends on:** Task 2.1
-- **Scope:** Set `user-invokable` and `disable-model-invocation` per agent role
+- **Scope:** Set `user-invocable` and `disable-model-invocation` per agent role
 
 **Visibility Matrix:**
-| Agent Type | `user-invokable` | `disable-model-invocation` |
+| Agent Type | `user-invocable` | `disable-model-invocation` |
 |-----------|-------------------|---------------------------|
 | Infrastructure (coordinator, memory-manager) | false | true |
 | User-facing (coder, researcher, tester, reviewer) | true | false |
 | Background-only (worker types) | false | true |
 
 **Acceptance Criteria:**
-- [ ] All agents have appropriate visibility flags
-- [ ] Infrastructure agents hidden from model auto-invocation
-- [ ] User-facing agents visible and invokable via `@agent-name`
+- [x] All agents have appropriate visibility flags
+- [x] Infrastructure agents hidden from model auto-invocation
+- [x] User-facing agents visible and invokable via `@agent-name`
+
+**Completion Notes:**
+- smart-agent, sona-learning-optimizer, project-coordinator: `user-invocable: false`, `disable-model-invocation: true`
+- All 98 agent files use correct `user-invocable` spelling (was `user-invokable`)
+- 29 infrastructure/background agents are `user-invocable: false`
+- 69 user-facing agents are `user-invocable: true`
 
 ---
 

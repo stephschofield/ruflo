@@ -8,8 +8,9 @@ tools:
   - ruflo
 handoffs:
   - agent: coordinator
-    trigger: When worker task completes or requires escalation
-user-invokable: false
+    label: Worker task completes or requires escalation
+    prompt: worker task completes or requires escalation
+user-invocable: false
 disable-model-invocation: true
 ---
 

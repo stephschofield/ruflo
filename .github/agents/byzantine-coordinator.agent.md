@@ -8,8 +8,9 @@ tools:
   - ruflo
 handoffs:
   - agent: coordinator
-    trigger: When consensus operation completes or requires escalation
-user-invokable: false
+    label: Consensus operation completes or requires escal...
+    prompt: consensus operation completes or requires escalation
+user-invocable: false
 disable-model-invocation: true
 ---
 

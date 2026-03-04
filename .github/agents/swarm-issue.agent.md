@@ -8,10 +8,12 @@ tools:
   - ruflo
 handoffs:
   - agent: coder
-    trigger: When issue requires code implementation
+    label: Issue requires code implementation
+    prompt: issue requires code implementation
   - agent: coordinator
-    trigger: When issue requires broader coordination
-user-invokable: true
+    label: Issue requires broader coordination
+    prompt: issue requires broader coordination
+user-invocable: true
 disable-model-invocation: false
 ---
 

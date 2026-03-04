@@ -8,12 +8,18 @@ model:
   - gpt-4.1
 handoffs:
   - agent: architect
-    trigger: When research reveals architectural decisions needed
+    label: Architecture decisions needed
+    prompt: Research reveals architectural decisions needed
   - agent: coder
-    trigger: When research is complete and implementation can begin
+    label: Ready for implementation
+    prompt: Research is complete and implementation can begin
+  - agent: tester
+    label: Test validation needed
+    prompt: Research findings need test validation
   - agent: coordinator
-    trigger: When research reveals scope changes or blockers
-user-invokable: true
+    label: Scope changes or blockers
+    prompt: Research reveals scope changes or blockers
+user-invocable: true
 argument-hint: Describe what you want to investigate or analyze...
 ---
 

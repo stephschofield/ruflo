@@ -6,15 +6,18 @@ model:
   - gpt-4.1
 tools:
   - ruflo
+  - agent
 agents:
   - reviewer
   - security-auditor
 handoffs:
   - agent: coder
-    trigger: When code changes are needed based on review findings
+    label: Code changes are needed based on review findings
+    prompt: code changes are needed based on review findings
   - agent: coordinator
-    trigger: When task requires broader coordination
-user-invokable: true
+    label: Task requires broader coordination
+    prompt: task requires broader coordination
+user-invocable: true
 disable-model-invocation: false
 ---
 

@@ -8,8 +8,9 @@ tools:
   - ruflo
 handoffs:
   - agent: coordinator
-    trigger: When synchronization operation completes
-user-invokable: false
+    label: Synchronization operation completes
+    prompt: synchronization operation completes
+user-invocable: false
 disable-model-invocation: true
 ---
 

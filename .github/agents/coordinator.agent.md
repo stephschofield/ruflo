@@ -3,6 +3,7 @@ name: coordinator
 description: Hierarchical swarm coordinator for task decomposition, agent delegation, and multi-agent orchestration
 tools:
   - ruflo
+  - agent
 model:
   - claude-sonnet-4
   - gpt-4.1
@@ -10,24 +11,33 @@ agents:
   - "*"
 handoffs:
   - agent: researcher
-    trigger: When task requires investigation or analysis before implementation
+    label: Task requires investigation or analysis before ...
+    prompt: task requires investigation or analysis before implementation
   - agent: architect
-    trigger: When task involves system design decisions
+    label: Task involves system design decisions
+    prompt: task involves system design decisions
   - agent: coder
-    trigger: When requirements are clear and implementation can begin
+    label: Requirements are clear and implementation can b...
+    prompt: requirements are clear and implementation can begin
   - agent: tester
-    trigger: When code is written and needs test coverage
+    label: Code is written and needs test coverage
+    prompt: code is written and needs test coverage
   - agent: reviewer
-    trigger: When implementation is complete and needs review
+    label: Implementation is complete and needs review
+    prompt: implementation is complete and needs review
   - agent: security-auditor
-    trigger: When changes touch auth, crypto, input handling, or external APIs
+    label: Changes touch auth, crypto, input handling, or ...
+    prompt: changes touch auth, crypto, input handling, or external APIs
   - agent: planner
-    trigger: When a complex task needs decomposition into phases
+    label: A complex task needs decomposition into phases
+    prompt: a complex task needs decomposition into phases
   - agent: pr-manager
-    trigger: When code is ready to be submitted as a pull request
+    label: Code is ready to be submitted as a pull request
+    prompt: code is ready to be submitted as a pull request
   - agent: issue-tracker
-    trigger: When new issues need to be created or existing ones tracked
-user-invokable: true
+    label: New issues need to be created or existing ones ...
+    prompt: new issues need to be created or existing ones tracked
+user-invocable: true
 argument-hint: Describe a complex task to coordinate across multiple agents...
 ---
 

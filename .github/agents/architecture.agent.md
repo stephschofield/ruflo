@@ -8,8 +8,9 @@ tools:
   - ruflo
 handoffs:
   - agent: coder
-    trigger: When architecture design is ready for implementation
-user-invokable: true
+    label: Architecture design is ready for implementation
+    prompt: architecture design is ready for implementation
+user-invocable: true
 disable-model-invocation: false
 ---
 

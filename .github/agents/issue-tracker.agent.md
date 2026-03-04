@@ -8,12 +8,15 @@ model:
   - gpt-4.1
 handoffs:
   - agent: researcher
-    trigger: When an issue requires investigation before work begins
+    label: An issue requires investigation before work begins
+    prompt: an issue requires investigation before work begins
   - agent: coder
-    trigger: When an issue is ready for implementation
+    label: An issue is ready for implementation
+    prompt: an issue is ready for implementation
   - agent: coordinator
-    trigger: When issues need cross-team coordination
-user-invokable: true
+    label: Issues need cross-team coordination
+    prompt: issues need cross-team coordination
+user-invocable: true
 argument-hint: Describe the issue you want to create or manage...
 ---
 

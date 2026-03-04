@@ -6,11 +6,15 @@ model:
   - gpt-4.1
 tools:
   - ruflo
+  - agent
+agents:
+  - "*"
 handoffs:
   - agent: coordinator
-    trigger: When task completes or needs broader coordination
-user-invokable: true
-disable-model-invocation: false
+    label: Coordination needed
+    prompt: Task completes or needs broader coordination
+user-invocable: false
+disable-model-invocation: true
 ---
 
 # Smart Agent Coordinator

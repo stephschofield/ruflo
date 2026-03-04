@@ -8,10 +8,12 @@ tools:
   - ruflo
 handoffs:
   - agent: tester
-    trigger: When refinement is complete and needs testing
+    label: Refinement is complete and needs testing
+    prompt: refinement is complete and needs testing
   - agent: reviewer
-    trigger: When refinement is ready for code review
-user-invokable: true
+    label: Refinement is ready for code review
+    prompt: refinement is ready for code review
+user-invocable: true
 disable-model-invocation: false
 ---
 

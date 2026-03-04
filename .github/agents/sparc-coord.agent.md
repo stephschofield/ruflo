@@ -6,6 +6,7 @@ model:
   - gpt-4.1
 tools:
   - ruflo
+  - agent
 agents:
   - specification
   - pseudocode
@@ -13,10 +14,12 @@ agents:
   - coder
 handoffs:
   - agent: specification
-    trigger: When starting SPARC pipeline
+    label: Starting SPARC pipeline
+    prompt: starting SPARC pipeline
   - agent: coordinator
-    trigger: When SPARC process completes
-user-invokable: true
+    label: SPARC process completes
+    prompt: SPARC process completes
+user-invocable: true
 disable-model-invocation: false
 ---
 

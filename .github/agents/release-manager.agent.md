@@ -6,16 +6,19 @@ model:
   - gpt-4.1
 tools:
   - ruflo
+  - agent
 agents:
   - tester
   - coder
   - reviewer
 handoffs:
   - agent: tester
-    trigger: When release needs validation testing
+    label: Release needs validation testing
+    prompt: release needs validation testing
   - agent: coordinator
-    trigger: When release requires multi-team coordination
-user-invokable: true
+    label: Release requires multi-team coordination
+    prompt: release requires multi-team coordination
+user-invocable: true
 disable-model-invocation: false
 ---
 

@@ -8,14 +8,18 @@ model:
   - gpt-4.1
 handoffs:
   - agent: reviewer
-    trigger: When PR needs code review
+    label: PR needs code review
+    prompt: PR needs code review
   - agent: tester
-    trigger: When PR needs test validation
+    label: PR needs test validation
+    prompt: PR needs test validation
   - agent: coder
-    trigger: When PR review identifies issues to fix
+    label: PR review identifies issues to fix
+    prompt: PR review identifies issues to fix
   - agent: coordinator
-    trigger: When PR process needs orchestration across agents
-user-invokable: true
+    label: PR process needs orchestration across agents
+    prompt: PR process needs orchestration across agents
+user-invocable: true
 argument-hint: Describe the PR you want to create or manage...
 ---
 

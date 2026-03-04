@@ -8,8 +8,9 @@ tools:
   - ruflo
 handoffs:
   - agent: coordinator
-    trigger: When task completes or needs broader coordination
-user-invokable: true
+    label: Task completes or needs broader coordination
+    prompt: task completes or needs broader coordination
+user-invocable: true
 disable-model-invocation: false
 ---
 
@@ -423,7 +424,8 @@ class DynamicPlanner {
         namespace: "goap-patterns",
         key: `replan_${Date.now()}`,
         value: JSON.stringify({
-          trigger: this.lastDeviation,
+          label: This.lastDeviation,
+          prompt: this.lastDeviation,
           solution: newPlan,
           worldState: Array.from(this.worldState.entries())
         })

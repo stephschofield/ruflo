@@ -3,19 +3,28 @@ name: planner
 description: Strategic planning and task orchestration agent for decomposing complex tasks into actionable steps
 tools:
   - ruflo
+  - agent
+agents:
+  - researcher
+  - architect
+  - coder
 model:
   - claude-sonnet-4
   - gpt-4.1
 handoffs:
   - agent: researcher
-    trigger: When the task requires investigation before planning
+    label: Investigation needed
+    prompt: The task requires investigation before planning can proceed
   - agent: architect
-    trigger: When the plan reveals architectural decisions needed
+    label: Architecture decisions needed
+    prompt: The plan reveals architectural decisions that need design work
   - agent: coder
-    trigger: When the plan is finalized and implementation can begin
+    label: Ready for implementation
+    prompt: The plan is finalized and implementation can begin
   - agent: coordinator
-    trigger: When the plan is ready for swarm-level orchestration
-user-invokable: true
+    label: Orchestration needed
+    prompt: The plan is ready for swarm-level orchestration
+user-invocable: true
 argument-hint: Describe a complex task you need planned out...
 ---
 

@@ -422,7 +422,7 @@ export class ContainerWorkerPool extends EventEmitter {
       const env = {
         ...this.config.env,
         ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
-        CLAUDE_CODE_HEADLESS: 'true',
+        CLAUDE_FLOW_HEADLESS: 'true',
         CLAUDE_FLOW_PROVIDER: this.config.defaultProvider,
       };
 

@@ -8,8 +8,9 @@ tools:
   - ruflo
 handoffs:
   - agent: coordinator
-    trigger: When reconnaissance completes and findings need action
-user-invokable: false
+    label: Reconnaissance completes and findings need action
+    prompt: reconnaissance completes and findings need action
+user-invocable: false
 disable-model-invocation: true
 ---
 

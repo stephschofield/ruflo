@@ -7,11 +7,16 @@ model:
   - claude-sonnet-4
   - gpt-4.1
 handoffs:
+  - agent: researcher
+    label: Investigation needed
+    prompt: Design needs deeper investigation into existing patterns or constraints
   - agent: coder
-    trigger: When design is finalized and implementation can begin
+    label: Ready for implementation
+    prompt: Design is finalized and implementation can begin
   - agent: coordinator
-    trigger: When architecture requires stakeholder decisions or scope changes
-user-invokable: true
+    label: Stakeholder decisions needed
+    prompt: Architecture requires stakeholder decisions or scope changes
+user-invocable: true
 argument-hint: Describe the system or feature you want to architect...
 ---
 

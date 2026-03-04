@@ -8,9 +8,10 @@ tools:
   - ruflo
 handoffs:
   - agent: coordinator
-    trigger: When task completes or needs broader coordination
-user-invokable: true
-disable-model-invocation: false
+    label: Coordination needed
+    prompt: Task completes or needs broader coordination
+user-invocable: false
+disable-model-invocation: true
 ---
 
 # SONA Learning Optimizer

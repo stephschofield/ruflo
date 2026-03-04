@@ -8,8 +8,9 @@ tools:
   - ruflo
 handoffs:
   - agent: coordinator
-    trigger: When quorum operation completes or requires escalation
-user-invokable: false
+    label: Quorum operation completes or requires escalation
+    prompt: quorum operation completes or requires escalation
+user-invocable: false
 disable-model-invocation: true
 ---
 

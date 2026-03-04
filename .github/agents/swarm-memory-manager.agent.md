@@ -8,8 +8,9 @@ tools:
   - ruflo
 handoffs:
   - agent: coordinator
-    trigger: When memory management operation completes
-user-invokable: false
+    label: Memory management operation completes
+    prompt: memory management operation completes
+user-invocable: false
 disable-model-invocation: true
 ---
 

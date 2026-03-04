@@ -8,10 +8,12 @@ tools:
   - ruflo
 handoffs:
   - agent: coder
-    trigger: When workflow automation requires code changes
+    label: Workflow automation requires code changes
+    prompt: workflow automation requires code changes
   - agent: coordinator
-    trigger: When workflow spans multiple teams
-user-invokable: true
+    label: Workflow spans multiple teams
+    prompt: workflow spans multiple teams
+user-invocable: true
 disable-model-invocation: false
 ---
 
@@ -474,12 +476,14 @@ agent_spawn { type: "analyst", name: "Workflow Analyzer" }
 automation_setup {
   rules: [
     {
-      trigger: "pull_request",
+      label: "pull_request",
+      prompt: "pull_request",
       conditions: ["files_changed > 10", "complexity_high"],
       actions: ["spawn_review_swarm", "parallel_testing", "security_scan"]
     },
     {
-      trigger: "push_to_main",
+      label: "push_to_main",
+      prompt: "push_to_main",
       conditions: ["all_tests_pass", "security_cleared"],
       actions: ["deploy_staging", "performance_test", "notify_stakeholders"]
     }

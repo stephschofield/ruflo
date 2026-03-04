@@ -8,10 +8,12 @@ tools:
   - ruflo
 handoffs:
   - agent: coder
-    trigger: When architecture decisions need implementation
+    label: Architecture decisions need implementation
+    prompt: architecture decisions need implementation
   - agent: coordinator
-    trigger: When architectural changes span multiple teams
-user-invokable: true
+    label: Architectural changes span multiple teams
+    prompt: architectural changes span multiple teams
+user-invocable: true
 disable-model-invocation: false
 ---
 

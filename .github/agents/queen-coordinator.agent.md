@@ -6,12 +6,14 @@ model:
   - gpt-4.1
 tools:
   - ruflo
+  - agent
 agents:
   - "*"
 handoffs:
   - agent: coordinator
-    trigger: When hive-mind operation requires top-level coordination
-user-invokable: false
+    label: Hive-mind operation requires top-level coordina...
+    prompt: hive-mind operation requires top-level coordination
+user-invocable: false
 disable-model-invocation: true
 ---
 

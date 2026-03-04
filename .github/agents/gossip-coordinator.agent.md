@@ -8,8 +8,9 @@ tools:
   - ruflo
 handoffs:
   - agent: coordinator
-    trigger: When gossip protocol operation completes
-user-invokable: false
+    label: Gossip protocol operation completes
+    prompt: gossip protocol operation completes
+user-invocable: false
 disable-model-invocation: true
 ---
 

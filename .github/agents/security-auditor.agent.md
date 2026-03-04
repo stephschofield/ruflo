@@ -8,10 +8,12 @@ model:
   - gpt-4.1
 handoffs:
   - agent: coder
-    trigger: When audit finds vulnerabilities that need fixing
+    label: Audit finds vulnerabilities that need fixing
+    prompt: audit finds vulnerabilities that need fixing
   - agent: coordinator
-    trigger: When audit reveals systemic security issues
-user-invokable: true
+    label: Audit reveals systemic security issues
+    prompt: audit reveals systemic security issues
+user-invocable: true
 argument-hint: Describe what you want audited for security...
 ---
 
