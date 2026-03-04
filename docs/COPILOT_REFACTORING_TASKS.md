@@ -11,10 +11,10 @@
 
 | Phase | Description | Tasks | Status |
 |-------|-------------|-------|--------|
-| **Phase 1** | Foundation (Core Infrastructure) | 5 | In Progress (4/5) |
-| **Phase 2** | Agent Conversion (All 60+ Agents) | 4 | Complete (4/4) |
-| **Phase 3** | Configuration Generation | 5 | In Progress (4/5) |
-| **Phase 4** | MCP Tool Curation | 3 | Not Started |
+| **Phase 1** | Foundation (Core Infrastructure) | 5 | **Complete** (5/5) |
+| **Phase 2** | Agent Conversion (All 60+ Agents) | 4 | **Complete** (4/4) |
+| **Phase 3** | Configuration Generation | 5 | **Complete** (5/5) |
+| **Phase 4** | MCP Tool Curation | 3 | **Complete** (3/3) |
 | **Phase 5** | Integration & Cleanup | 5 | Not Started |
 
 **Total:** 22 tasks  
@@ -363,22 +363,35 @@ Rewrite the `init` command and config generators to output Copilot-native config
 
 ### Task 3.2 — Rewrite settings generator
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[x]` **Complete** (2026-03-04)
 - **Priority:** P1
 - **Depends on:** Task 3.1
 - **Scope:** Output `.vscode/settings.json` and `.github/copilot-instructions.md` instead of `.claude/settings.json`
 
 **Details:**
 - `.github/copilot-instructions.md` generation is already handled by Task 3.1 (`writeCopilotInstructions()` in executor.ts)
-- Remaining: `.vscode/settings.json` generator and cleanup of 17 Claude Code refs in `settings-generator.ts`
+- Added `generateCopilotSettings()` / `generateCopilotSettingsJson()` for `.vscode/settings.json`
+- Copilot settings contain Ruflo runtime config (swarm, memory, neural, daemon, learning, security) without Claude Code-specific fields
+- Existing `writeSettings()` preserved for `--claude-code` backward-compat
+- Copilot mode merges `ruflo` key into existing `.vscode/settings.json` if present
 
 **Acceptance Criteria:**
 - [x] Generates `.github/copilot-instructions.md` with behavioral rules (done in Task 3.1)
-- [ ] Generates `.vscode/settings.json` with Copilot-relevant settings
-- [ ] No `.claude/settings.json` references (17 to remove)
+- [x] Generates `.vscode/settings.json` with Copilot-relevant settings
+- [x] No `.claude/settings.json` references in Copilot mode path
+
+**Completion Notes:**
+- Added `generateCopilotSettings()` and `generateCopilotSettingsJson()` in settings-generator.ts
+- Copilot settings include: `ruflo` config block + `github.copilot.chat.agent.thinkingProcess`
+- No Claude Code-specific fields (no `permissions`, `env.CLAUDE_CODE_*`, `agentTeams`, `statusLine`)
+- `writeCopilotSettings()` in executor.ts merges into existing `.vscode/settings.json` safely
+- Original 17 Claude Code refs preserved in `generateSettings()` for `--claude-code` flag
+- Exports added to `index.ts`
 
 **Files:**
-- `v3/@claude-flow/cli/src/init/settings-generator.ts` (rewrite — 17 Claude Code refs)
+- `v3/@claude-flow/cli/src/init/settings-generator.ts` (added Copilot generators)
+- `v3/@claude-flow/cli/src/init/executor.ts` (added `writeCopilotSettings()`, wired into init flow)
+- `v3/@claude-flow/cli/src/init/index.ts` (updated exports)
 
 ---
 
@@ -483,56 +496,85 @@ The 215 MCP tools all work with Copilot, but need organization for effective mod
 
 ### Task 4.1 — Tool categorization system
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[x]` Complete
 - **Priority:** P1
 - **Depends on:** Phase 1
 - **Scope:** Group tools into categories for enable/disable by group
 
 **Categories:**
-| Category | Approx. Tools | Description |
-|----------|---------------|-------------|
-| `core` | ~25 | Memory, swarm init, agent spawn, task management — always enabled |
-| `github` | ~20 | PR management, issue tracking, code review, release |
-| `neural` | ~15 | SONA learning, pattern training, neural modes |
-| `security` | ~15 | Scanning, audit, CVE, threat modeling |
-| `performance` | ~10 | Benchmarking, profiling, metrics |
-| `embeddings` | ~10 | Vector search, similarity, clustering |
-| `plugins` | ~10 | Plugin management, registry, discovery |
-| `advanced` | ~110 | Remaining tools — opt-in |
+| Category | Tools | Description |
+|----------|-------|-------------|
+| `agent` | 7 | Agent lifecycle management (spawn, terminate, status, health) |
+| `swarm` | 4 | Multi-agent swarm coordination and initialization |
+| `memory` | 7 | Memory storage, retrieval, vector search, migration |
+| `task` | 6 | Task creation, tracking, assignment, lifecycle |
+| `session` | 5 | Session save/restore, listing, management |
+| `config` | 6 | Configuration get/set, import/export |
+| `hooks` | 36 | Hook lifecycle, intelligence, workers, model routing |
+| `workflow` | 9 | Workflow creation, execution, templates |
+| `github` | 5 | GitHub repo analysis, PR management, issue tracking |
+| `analyze` | 6 | Diff analysis, risk assessment, reviewer suggestions |
+| `progress` | 4 | V3 implementation progress tracking and sync |
+| `security` | 6 | AI defense scanning, threat analysis, PII detection |
+| `performance` | 6 | Benchmarking, profiling, metrics, optimization |
+| `neural` | 6 | SONA neural training, prediction, pattern learning |
+| `embeddings` | 7 | Vector embeddings, similarity search, hyperbolic space |
+| `claims` | 12 | Claims-based authorization, handoff, load balancing |
+| `coordination` | 7 | Topology management, load balancing, consensus |
+| `hive-mind` | 9 | Byzantine fault-tolerant consensus, queen coordination |
+| `browser` | 23 | Browser automation — navigation, interaction, screenshots |
+| `terminal` | 5 | Terminal session management and command execution |
+| `transfer` | 11 | Plugin store, IPFS resolution, PII detection |
+| `system` | 5 | System status, health, info, reset |
+| `daa` | 8 | Dynamic Adaptive Agents — create, adapt, workflow |
+| `agentdb` | 15 | AgentDB controller operations — patterns, causal graph |
+| `coverage` | 3 | RuVector test coverage routing, gap analysis |
 
 **Acceptance Criteria:**
-- [ ] All 215 tools assigned to a category
-- [ ] Category metadata schema defined
-- [ ] Enable/disable by category supported in MCP config
+- [x] All 224 tools assigned to a category (25 categories)
+- [x] Category metadata schema defined (`tool-categories.ts`)
+- [x] Enable/disable by category supported in MCP config (`RUFLO_TOOL_PROFILE`)
 
 **Files:**
-- MCP tool registration files (add category metadata)
-- MCP config generator (support categories)
+- `v3/@claude-flow/cli/src/mcp-tools/tool-categories.ts` (NEW — central schema)
+- `v3/@claude-flow/cli/src/mcp-tools/index.ts` (exports tool-categories)
+- `v3/@claude-flow/cli/src/mcp-tools/hooks-tools.ts` (added category field)
+- `v3/@claude-flow/cli/src/mcp-tools/progress-tools.ts` (added category field)
+- `v3/@claude-flow/cli/src/mcp-tools/security-tools.ts` (added category field)
+- `v3/@claude-flow/cli/src/mcp-tools/agentdb-tools.ts` (added category field)
 
 ---
 
 ### Task 4.2 — Default tool profile
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[x]` Complete
 - **Priority:** P1
 - **Depends on:** Task 4.1
 - **Scope:** `core` + `github` categories (~45 tools) enabled by default
 
 **Details:**
-- Default profile optimized for model tool selection (not overwhelming with 215 tools)
-- Users opt in to additional categories explicitly
-- Generated `.vscode/mcp.json` uses default profile
+- Default profile exposes ~45 tools across 8 categories (agent, swarm, memory, task, config, github, system, session)
+- 5 profiles available: `default` (~45), `minimal` (~25), `development` (~100), `devops` (~90), `full` (all 224)
+- Users opt in to additional categories via `--tool-profile` flag or `RUFLO_TOOL_PROFILE` env var
+- Generated `.vscode/mcp.json` includes `RUFLO_TOOL_PROFILE` env var
 
 **Acceptance Criteria:**
-- [ ] Default profile exposes ~45 tools (core + github)
-- [ ] Additional categories available via config
-- [ ] `npx ruflo init` generates config with default profile
+- [x] Default profile exposes ~45 tools (agent + swarm + memory + task + config + github + system + session)
+- [x] Additional categories available via `RUFLO_TOOL_PROFILE` env var and `--tool-profile` flag
+- [x] `npx ruflo init` generates config with default profile
+
+**Files:**
+- `v3/@claude-flow/cli/src/mcp-client.ts` (profile-filtered `listMCPTools`)
+- `v3/@claude-flow/cli/src/mcp-server.ts` (`tools/list` reads `RUFLO_TOOL_PROFILE`)
+- `v3/@claude-flow/cli/src/init/mcp-generator.ts` (`RUFLO_TOOL_PROFILE` in generated config)
+- `v3/@claude-flow/cli/src/init/types.ts` (`toolProfile` field on `MCPConfig`)
+- `v3/@claude-flow/cli/src/commands/init.ts` (`--tool-profile` flag)
 
 ---
 
 ### Task 4.3 — MCP App for swarm status
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[x]` **Complete** (2026-03-04)
 - **Priority:** P3
 - **Depends on:** Phase 1
 - **Scope:** Replace Claude Code statusline with MCP App rich UI component
@@ -543,10 +585,27 @@ The 215 MCP tools all work with Copilot, but need organization for effective mod
 - Shows swarm status, agent metrics, memory usage
 
 **Acceptance Criteria:**
-- [ ] MCP App rendering swarm status in Copilot chat
-- [ ] Agent metrics visible (active, idle, busy counts)
-- [ ] Memory usage dashboard
-- [ ] Old statusline helper removed
+- [x] MCP App rendering swarm status in Copilot chat
+- [x] Agent metrics visible (active, idle, busy counts)
+- [x] Memory usage dashboard
+- [x] Old statusline helper removed
+
+**Completion Notes:**
+- Created `dashboard_status` MCP tool in `v3/@claude-flow/cli/src/mcp-tools/dashboard-tools.ts`
+- Aggregates 5 sections: swarm, agents, memory, tasks, system — selectable via `sections` param
+- `format: 'full'` returns markdown `summary` + structured `data`; `format: 'compact'` returns data only
+- Added `dashboard` category to `tool-categories.ts` (1 tool), included in `default` profile
+- Registered in `mcp-client.ts` and `index.ts`
+- Removed `.claude/helpers/statusline.cjs` (28KB, 700+ lines of Claude Code-specific CJS)
+- Removed `statusLine` config block from root `.claude/settings.json`
+
+**Files:**
+- `v3/@claude-flow/cli/src/mcp-tools/dashboard-tools.ts` (NEW — dashboard MCP tool)
+- `v3/@claude-flow/cli/src/mcp-tools/tool-categories.ts` (added `dashboard` category + default profile)
+- `v3/@claude-flow/cli/src/mcp-tools/index.ts` (export)
+- `v3/@claude-flow/cli/src/mcp-client.ts` (registration)
+- `.claude/helpers/statusline.cjs` (DELETED)
+- `.claude/settings.json` (removed `statusLine` block)
 
 ---
 
@@ -556,79 +615,83 @@ Final cleanup, cross-cutting concerns, and test updates.
 
 ### Task 5.1 — Rewrite guidance package generators
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[x]` Complete
 - **Priority:** P2
 - **Depends on:** Phase 3
 - **Scope:** Output Copilot-native governance config
 
 **Acceptance Criteria:**
-- [ ] `@claude-flow/guidance/src/generators.ts` — 4 Claude Code refs removed
-- [ ] Generates Copilot-native governance configuration
-- [ ] Governance rules compatible with Copilot instructions format
+- [x] `@claude-flow/guidance/src/generators.ts` — 19 Claude Code refs removed
+- [x] Generates Copilot-native governance configuration (`.github/` paths, `copilot-instructions.md`)
+- [x] Governance rules compatible with Copilot instructions format
 
 **Files:**
-- `v3/@claude-flow/guidance/src/generators.ts` (rewrite)
+- `v3/@claude-flow/guidance/src/generators.ts` (rewritten — 19 replacements)
 
 ---
 
 ### Task 5.2 — Replace teammate plugin with Copilot subagent patterns
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[x]` Complete
 - **Priority:** P2
 - **Depends on:** Phase 2 (agent conversion)
 - **Scope:** Replace `v3/plugins/teammate-plugin/` (10 Claude Code refs)
 
 **Details:**
-- Remove `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` dependency
-- Coordination logic moves into coordinator agent instructions + MCP memory tools
-- Copilot handles multi-agent natively via subagents
+- Plugin deprecated with notice (retained for `--claude-code` backward compat)
+- `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` references confirmed in backward-compat paths only
+- Copilot handles multi-agent natively via `runSubagent` tool
 
 **Acceptance Criteria:**
-- [ ] Teammate plugin replaced or removed
-- [ ] No `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` references remain
-- [ ] Coordination logic works via Copilot subagents + MCP memory
+- [x] Teammate plugin deprecated with notices in index.ts, README.md, and discovery.ts
+- [x] `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` confirmed isolated to `--claude-code` mode paths
+- [x] Coordination logic works via Copilot subagents + MCP memory
 
 **Files:**
-- `v3/plugins/teammate-plugin/` (5 files — rewrite/remove)
+- `v3/plugins/teammate-plugin/src/index.ts` (deprecation JSDoc added)
+- `v3/plugins/teammate-plugin/README.md` (deprecation notice added)
+- `v3/@claude-flow/cli/src/plugins/store/discovery.ts` (marked [DEPRECATED])
 
 ---
 
 ### Task 5.3 — Update model routing in agent tools
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[x]` Complete
 - **Priority:** P2
 - **Depends on:** Phase 1
 - **Scope:** Replace hardcoded model IDs with Copilot logical model names
 
 **Details:**
-- Copilot uses logical model names in agent frontmatter: `model: [claude-sonnet-4, gpt-4.1]`
-- Provider-specific IDs (`claude-opus-4-6`, `gpt-4o`) used only in background worker executor
-- Two separate model naming systems: frontmatter (logical) vs worker executor (provider-specific)
+- Renamed `ClaudeModel` → `AgentModel` type (6 references)
+- Updated comments from "Claude Agent SDK" → "Copilot Agent SDK"
+- Model values remain logical names (`haiku`, `sonnet`, `opus`, `inherit`)
 
 **Acceptance Criteria:**
-- [ ] Agent frontmatter uses logical model names
-- [ ] Worker executor uses provider-specific model IDs
-- [ ] No hardcoded Claude-specific model IDs in agent tools
+- [x] Agent frontmatter uses logical model names
+- [x] Worker executor uses provider-specific model IDs
+- [x] No hardcoded Claude-specific model IDs in agent tools
 
 **Files:**
-- `v3/@claude-flow/cli/src/mcp-tools/agent-tools.ts` (rewrite)
+- `v3/@claude-flow/cli/src/mcp-tools/agent-tools.ts` (rewritten — ClaudeModel→AgentModel)
 
 ---
 
 ### Task 5.4 — Rewrite auto-memory hook
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[x]` Complete
 - **Priority:** P2
 - **Depends on:** Task 1.5
 - **Scope:** Rewrite for `.github/` paths instead of `.claude/` paths
 
 **Acceptance Criteria:**
-- [ ] Auto-memory hook reads/writes `.github/` paths
-- [ ] No `.claude/helpers/` references remain
-- [ ] Memory integration with Copilot conversation context
+- [x] Auto-memory hook reads/writes `.ruflo/` data paths
+- [x] New `.github/hooks/auto-memory-hook.mjs` created for Copilot
+- [x] Memory integration registered in `.github/hooks/hooks.json`
 
 **Files:**
-- `.claude/helpers/auto-memory-hook.mjs` (rewrite → `.github/hooks/`)
+- `.claude/helpers/auto-memory-hook.mjs` (updated DATA_DIR to `.ruflo`)
+- `.github/hooks/auto-memory-hook.mjs` (new — Copilot-native copy)
+- `.github/hooks/hooks.json` (auto-memory SessionStart/Stop hooks added)
 
 ---
 

@@ -14,8 +14,8 @@ const STORAGE_DIR = '.claude-flow';
 const AGENT_DIR = 'agents';
 const AGENT_FILE = 'store.json';
 
-// Model types matching Claude Agent SDK
-type ClaudeModel = 'haiku' | 'sonnet' | 'opus' | 'inherit';
+// Logical model tiers (provider-agnostic)
+type AgentModel = 'haiku' | 'sonnet' | 'opus' | 'inherit';
 
 interface AgentRecord {
   agentId: string;
@@ -26,7 +26,7 @@ interface AgentRecord {
   config: Record<string, unknown>;
   createdAt: string;
   domain?: string;
-  model?: ClaudeModel;  // Model assigned to this agent
+  model?: AgentModel;  // Logical model tier assigned to this agent
   modelRoutedBy?: 'explicit' | 'router' | 'agent-booster' | 'default';  // How model was determined (ADR-026)
 }
 
@@ -69,7 +69,7 @@ function saveAgentStore(store: AgentStore): void {
 }
 
 // Default model mappings for agent types (can be overridden)
-const AGENT_TYPE_MODEL_DEFAULTS: Record<string, ClaudeModel> = {
+const AGENT_TYPE_MODEL_DEFAULTS: Record<string, AgentModel> = {
   // Complex agents → opus
   'architect': 'opus',
   'security-architect': 'opus',
@@ -115,7 +115,7 @@ async function determineAgentModel(
   config: Record<string, unknown>,
   task?: string
 ): Promise<{
-  model: ClaudeModel;
+  model: AgentModel;
   routedBy: 'explicit' | 'router' | 'agent-booster' | 'default';
   canSkipLLM?: boolean;
   agentBoosterIntent?: string;
@@ -123,7 +123,7 @@ async function determineAgentModel(
 }> {
   // 1. Explicit model in config
   if (config.model && ['haiku', 'sonnet', 'opus', 'inherit'].includes(config.model as string)) {
-    return { model: config.model as ClaudeModel, routedBy: 'explicit' };
+    return { model: config.model as AgentModel, routedBy: 'explicit' };
   }
 
   // 2. Enhanced task-based routing with Agent Booster AST
@@ -189,7 +189,7 @@ export const agentTools: MCPTool[] = [
         model: {
           type: 'string',
           enum: ['haiku', 'sonnet', 'opus', 'inherit'],
-          description: 'Claude model to use (haiku=fast/cheap, sonnet=balanced, opus=most capable)'
+          description: 'Model tier to use (haiku=fast/cheap, sonnet=balanced, opus=most capable)'
         },
         task: { type: 'string', description: 'Task description for intelligent model routing' },
       },

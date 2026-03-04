@@ -6,6 +6,11 @@
       "description": "Initialize ruflo session context and load patterns"
     },
     {
+      "event": "SessionStart",
+      "command": "node \"$(git rev-parse --show-toplevel)/.github/hooks/auto-memory-hook.mjs\" import",
+      "description": "Import auto memory files into bridge on session start"
+    },
+    {
       "event": "UserPromptSubmit",
       "command": "npx ruflo hooks pre-task --description \"$PROMPT\"",
       "description": "Pre-process user prompts for routing and context enrichment"
@@ -38,6 +43,11 @@
       "event": "Stop",
       "command": "npx ruflo hooks session-end --session-id \"$SESSION_ID\" --export-metrics",
       "description": "Export session metrics and save state on session end"
+    },
+    {
+      "event": "Stop",
+      "command": "node \"$(git rev-parse --show-toplevel)/.github/hooks/auto-memory-hook.mjs\" sync",
+      "description": "Sync insights back to auto memory files on session end"
     }
   ]
 }

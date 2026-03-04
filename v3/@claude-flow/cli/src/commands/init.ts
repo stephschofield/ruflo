@@ -184,6 +184,7 @@ const initAction = async (ctx: CommandContext): Promise<CommandResult> => {
   const codexMode = ctx.flags.codex as boolean;
   const dualMode = ctx.flags.dual as boolean;
   const claudeCodeMode = ctx.flags['claude-code'] as boolean;
+  const toolProfile = (ctx.flags['tool-profile'] || ctx.flags.toolProfile || 'default') as string;
   const cwd = ctx.cwd;
 
   // If codex mode, use the Codex initializer
@@ -229,6 +230,11 @@ const initAction = async (ctx: CommandContext): Promise<CommandResult> => {
     options = { ...FULL_INIT_OPTIONS, targetDir: cwd, force };
   } else {
     options = { ...DEFAULT_INIT_OPTIONS, targetDir: cwd, force };
+  }
+
+  // Apply --tool-profile flag
+  if (toolProfile && toolProfile !== 'default') {
+    options.mcp = { ...options.mcp, toolProfile: toolProfile as 'default' | 'full' | 'minimal' };
   }
 
   // Apply --claude-code flag: override platform and components
@@ -1108,6 +1114,13 @@ export const initCommand: Command = {
       type: 'boolean',
       default: false,
     },
+    {
+      name: 'tool-profile',
+      description: 'MCP tool profile: default (~45 tools), full (all 224), minimal (~25), development (~100), devops (~90)',
+      type: 'string',
+      default: 'default',
+      choices: ['default', 'full', 'minimal', 'development', 'devops'],
+    },
   ],
   examples: [
     { command: 'ruflo init', description: 'Initialize with Copilot-native output (default)' },
@@ -1124,6 +1137,8 @@ export const initCommand: Command = {
     { command: 'ruflo init upgrade --settings', description: 'Update helpers and merge new settings' },
     { command: 'ruflo init --codex', description: 'Initialize for OpenAI Codex (AGENTS.md)' },
     { command: 'ruflo init --dual', description: 'Initialize for both Claude Code and Codex' },
+    { command: 'ruflo init --tool-profile full', description: 'Expose all 224 MCP tools' },
+    { command: 'ruflo init --tool-profile minimal', description: 'Expose only core MCP tools (~25)' },
   ],
   action: initAction,
 };

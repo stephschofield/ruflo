@@ -90,6 +90,7 @@ async function getAIDefence(): Promise<AIDefenceInstance> {
  */
 const aidefenceScanTool: MCPTool = {
   name: 'aidefence_scan',
+  category: 'security',
   description: 'Scan input text for AI manipulation threats (prompt injection, jailbreaks, PII). Returns threat assessment with <10ms latency.',
   inputSchema: {
     type: 'object',
@@ -162,6 +163,7 @@ const aidefenceScanTool: MCPTool = {
  */
 const aidefenceAnalyzeTool: MCPTool = {
   name: 'aidefence_analyze',
+  category: 'security',
   description: 'Deep analysis of input for specific threat types with similar pattern search and mitigation recommendations.',
   inputSchema: {
     type: 'object',
@@ -247,6 +249,7 @@ const aidefenceAnalyzeTool: MCPTool = {
  */
 const aidefenceStatsTool: MCPTool = {
   name: 'aidefence_stats',
+  category: 'security',
   description: 'Get AIDefence detection and learning statistics.',
   inputSchema: {
     type: 'object',
@@ -286,6 +289,7 @@ const aidefenceStatsTool: MCPTool = {
  */
 const aidefenceLearnTool: MCPTool = {
   name: 'aidefence_learn',
+  category: 'security',
   description: 'Record detection feedback for pattern learning. Improves future detection accuracy.',
   inputSchema: {
     type: 'object',
@@ -378,6 +382,7 @@ const aidefenceLearnTool: MCPTool = {
  */
 const aidefenceIsSafeTool: MCPTool = {
   name: 'aidefence_is_safe',
+  category: 'security',
   description: 'Quick boolean check if input is safe. Fastest option for simple validation.',
   inputSchema: {
     type: 'object',
@@ -419,6 +424,7 @@ const aidefenceIsSafeTool: MCPTool = {
  */
 const aidefenceHasPIITool: MCPTool = {
   name: 'aidefence_has_pii',
+  category: 'security',
   description: 'Check if input contains PII (emails, SSNs, API keys, passwords, etc.).',
   inputSchema: {
     type: 'object',

@@ -175,6 +175,8 @@ export interface MCPConfig {
   autoStart: boolean;
   /** Server port */
   port: number;
+  /** Tool profile: controls which tool categories are exposed to the host */
+  toolProfile?: 'default' | 'full' | 'minimal';
 }
 
 /**
@@ -398,6 +400,7 @@ export const DEFAULT_INIT_OPTIONS: InitOptions = {
     flowNexus: false,
     autoStart: false,
     port: 3000,
+    toolProfile: 'default',
   },
   runtime: {
     topology: 'hierarchical-mesh',

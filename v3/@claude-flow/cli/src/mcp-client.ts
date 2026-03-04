@@ -9,6 +9,7 @@
  */
 
 import type { MCPTool } from './mcp-tools/types.js';
+import { isCategoryAllowed, resolveProfileName } from './mcp-tools/tool-categories.js';
 
 // Import MCP tool handlers from local package
 import { agentTools } from './mcp-tools/agent-tools.js';
@@ -37,6 +38,8 @@ import { coordinationTools } from './mcp-tools/coordination-tools.js';
 import { browserTools } from './mcp-tools/browser-tools.js';
 // Phase 6: AgentDB v3 controller tools
 import { agentdbTools } from './mcp-tools/agentdb-tools.js';
+// Phase 4.3: Dashboard tools
+import { dashboardTools } from './mcp-tools/dashboard-tools.js';
 
 /**
  * MCP Tool Registry
@@ -79,6 +82,8 @@ registerTools([
   ...browserTools,
   // Phase 6: AgentDB v3 controller tools
   ...agentdbTools,
+  // Phase 4.3: Dashboard tools
+  ...dashboardTools,
 ]);
 
 /**
@@ -175,17 +180,19 @@ export function getToolMetadata(toolName: string): Omit<MCPTool, 'handler'> | un
 }
 
 /**
- * List all available MCP tools
+ * List available MCP tools, optionally filtered by category or active profile.
  *
- * @param category - Optional category filter
+ * @param category - Optional single-category filter (overrides profile)
+ * @param profileName - Optional profile name for multi-category filtering
  * @returns Array of tool metadata
  */
-export function listMCPTools(category?: string): Array<Omit<MCPTool, 'handler'>> {
+export function listMCPTools(category?: string, profileName?: string): Array<Omit<MCPTool, 'handler'>> {
   const tools = Array.from(TOOL_REGISTRY.values());
+  const activeProfile = resolveProfileName(profileName);
 
   const filtered = category
     ? tools.filter(t => t.category === category)
-    : tools;
+    : tools.filter(t => isCategoryAllowed(t.category, activeProfile));
 
   return filtered.map(tool => ({
     name: tool.name,

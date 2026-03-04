@@ -284,10 +284,6 @@
     "source": ".claude/commands",
     "enabled": true
   },
-  "statusLine": {
-    "type": "command",
-    "command": "node \"$(git rev-parse --show-toplevel)/.claude/helpers/statusline.cjs\""
-  },
   "mcpServers": {
     "claude-flow": {
       "command": "node",

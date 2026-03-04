@@ -63,6 +63,7 @@ export function generateMCPConfig(options: InitOptions): object {
         CLAUDE_FLOW_TOPOLOGY: options.runtime.topology,
         CLAUDE_FLOW_MAX_AGENTS: String(options.runtime.maxAgents),
         CLAUDE_FLOW_MEMORY_BACKEND: options.runtime.memoryBackend,
+        RUFLO_TOOL_PROFILE: config.toolProfile || 'default',
       },
       { autoStart: config.autoStart }
     );
@@ -116,6 +117,7 @@ export function generateCopilotMCPConfig(options: InitOptions): object {
         CLAUDE_FLOW_TOPOLOGY: options.runtime.topology,
         CLAUDE_FLOW_MAX_AGENTS: String(options.runtime.maxAgents),
         CLAUDE_FLOW_MEMORY_BACKEND: options.runtime.memoryBackend,
+        RUFLO_TOOL_PROFILE: config.toolProfile || 'default',
       },
     );
   }

@@ -14,7 +14,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 import type { InitOptions, InitResult, PlatformInfo } from './types.js';
 import { detectPlatform, DEFAULT_INIT_OPTIONS } from './types.js';
-import { generateSettingsJson, generateSettings } from './settings-generator.js';
+import { generateSettingsJson, generateSettings, generateCopilotSettingsJson } from './settings-generator.js';
 import { generateMCPJson, generateCopilotMCPJson } from './mcp-generator.js';
 import { generateStatuslineScript, generateStatuslineHook } from './statusline-generator.js';
 import {
@@ -189,6 +189,11 @@ export async function executeInit(options: InitOptions): Promise<InitResult> {
     // Generate and write settings.json (Claude Code only)
     if (options.components.settings && !isCopilot) {
       await writeSettings(targetDir, options, result);
+    }
+
+    // Generate and write .vscode/settings.json (Copilot only)
+    if (options.components.settings && isCopilot) {
+      await writeCopilotSettings(targetDir, options, result);
     }
 
     // Generate and write MCP config
@@ -758,6 +763,36 @@ async function writeSettings(
   const content = generateSettingsJson(options);
   fs.writeFileSync(settingsPath, content, 'utf-8');
   result.created.files.push('.claude/settings.json');
+}
+
+/**
+ * Write .vscode/settings.json for Copilot
+ */
+async function writeCopilotSettings(
+  targetDir: string,
+  options: InitOptions,
+  result: InitResult
+): Promise<void> {
+  const settingsPath = path.join(targetDir, '.vscode', 'settings.json');
+  const displayPath = '.vscode/settings.json';
+
+  if (fs.existsSync(settingsPath) && !options.force) {
+    // Merge ruflo key into existing settings instead of overwriting
+    try {
+      const existing = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+      const copilotSettings = JSON.parse(generateCopilotSettingsJson(options));
+      const merged = { ...existing, ...copilotSettings };
+      fs.writeFileSync(settingsPath, JSON.stringify(merged, null, 2), 'utf-8');
+      result.created.files.push(displayPath);
+    } catch {
+      result.skipped.push(displayPath);
+    }
+    return;
+  }
+
+  const content = generateCopilotSettingsJson(options);
+  fs.writeFileSync(settingsPath, content, 'utf-8');
+  result.created.files.push(displayPath);
 }
 
 /**

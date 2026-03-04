@@ -418,7 +418,8 @@ export class MCPServerManager extends EventEmitter {
           };
 
         case 'tools/list':
-          const tools = listMCPTools();
+          const profileName = process.env.RUFLO_TOOL_PROFILE || 'default';
+          const tools = listMCPTools(undefined, profileName);
           return {
             jsonrpc: '2.0',
             id: message.id,
