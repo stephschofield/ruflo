@@ -1030,7 +1030,7 @@ export class PluginDiscoveryService {
         id: '@claude-flow/teammate-plugin',
         name: '@claude-flow/teammate-plugin',
         displayName: 'Teammate Plugin',
-        description: 'Native TeammateTool integration for Claude Code v2.1.19+. Multi-agent team orchestration with plan approval workflows, delegation, messaging, and BMSSP-optimized topology routing. 21 MCP tools.',
+        description: '[DEPRECATED] Native TeammateTool integration for Claude Code v2.1.19+. Use Copilot native subagent patterns instead. Multi-agent team orchestration with plan approval workflows, delegation, messaging, and BMSSP-optimized topology routing. 21 MCP tools.',
         version: '1.0.0-alpha.1',
         cid: 'bafybeiteammateplugin2026',
         size: 387000,

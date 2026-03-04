@@ -1,10 +1,10 @@
 /**
- * CLAUDE.md Generator
+ * Project Instructions Generator
  *
- * Generates a structured CLAUDE.md file optimized for the Guidance Control Plane.
- * The output is designed so that when compiled by GuidanceCompiler, it produces
- * a clean constitution (always-loaded invariants) and well-tagged shards
- * (task-scoped rules retrievable by intent).
+ * Generates structured project instruction files optimized for the Guidance Control Plane.
+ * Outputs copilot-instructions.md (Copilot) or CLAUDE.md (Claude Code, backward-compat).
+ * When compiled by GuidanceCompiler, produces a clean constitution (always-loaded
+ * invariants) and well-tagged shards (task-scoped rules retrievable by intent).
  *
  * Structure conventions:
  * - Lines 1-60: Constitution (always loaded into every task)
@@ -136,9 +136,14 @@ export interface AgentDefinition {
 }
 
 // ============================================================================
-// CLAUDE.md Generator
+// Project Instructions Generator (copilot-instructions.md / CLAUDE.md)
 // ============================================================================
 
+export function generateProjectInstructions(profile: ProjectProfile): string {
+  return generateClaudeMd(profile);
+}
+
+/** @deprecated Use generateProjectInstructions — kept for backward compatibility */
 export function generateClaudeMd(profile: ProjectProfile): string {
   const sections: string[] = [];
 
@@ -208,7 +213,7 @@ export function generateClaudeMd(profile: ProjectProfile): string {
   sections.push('## Project Structure');
   sections.push('');
   if (profile.monorepo) {
-    sections.push('This is a monorepo. Each package has its own CLAUDE.md that layers on top of this root file.');
+    sections.push('This is a monorepo. Each package has its own project instructions that layer on top of this root file.');
   }
   if (profile.srcDir) {
     sections.push(`Source code: \`${profile.srcDir}/\``);
@@ -275,7 +280,7 @@ export function generateClaudeMd(profile: ProjectProfile): string {
     sections.push('retrieved by intent classification — only relevant rules are injected per task.');
     sections.push('');
     sections.push('Gates enforce: destructive ops, secrets detection, diff size limits, tool allowlist.');
-    sections.push('The optimizer watches violations and promotes winning CLAUDE.local.md experiments here.');
+    sections.push('The optimizer watches violations and promotes winning local config experiments here.');
     sections.push('');
     if (profile.wasmKernel) {
       sections.push('WASM kernel: hot-path operations (hashing, secret scanning) use the Rust WASM kernel');
@@ -308,15 +313,20 @@ export function generateClaudeMd(profile: ProjectProfile): string {
 }
 
 // ============================================================================
-// CLAUDE.local.md Generator
+// Local Development Notes Generator
 // ============================================================================
 
+export function generateLocalConfig(local: LocalProfile): string {
+  return generateClaudeLocalMd(local);
+}
+
+/** @deprecated Use generateLocalConfig — kept for backward compatibility */
 export function generateClaudeLocalMd(local: LocalProfile): string {
   const sections: string[] = [];
 
   sections.push('# Local Development Notes');
   sections.push('');
-  sections.push('> This file is auto-gitignored by Claude Code. It stays on this machine only.');
+  sections.push('> This file is gitignored. It stays on this machine only.');
   sections.push('');
 
   if (local.developer) {
@@ -538,14 +548,18 @@ export function generateAgentIndex(agents: AgentDefinition[]): string {
 }
 
 // ============================================================================
-// Scaffold Generator (creates full .claude/ directory structure)
+// Scaffold Generator (creates full project config directory structure)
 // ============================================================================
 
+export type ScaffoldPlatform = 'copilot' | 'claude-code';
+
 export interface ScaffoldOptions {
-  /** Project profile for CLAUDE.md */
+  /** Project profile for instructions file */
   project: ProjectProfile;
-  /** Local profile for CLAUDE.local.md (optional) */
+  /** Local profile for local config (optional) */
   local?: LocalProfile;
+  /** Target platform (default: 'copilot') */
+  platform?: ScaffoldPlatform;
   /** Skills to generate */
   skills?: SkillDefinition[];
   /** Agents to generate */
@@ -563,13 +577,17 @@ export interface ScaffoldResult {
 
 export function scaffold(options: ScaffoldOptions): ScaffoldResult {
   const files = new Map<string, string>();
+  const platform = options.platform || 'copilot';
+  const isCopilot = platform === 'copilot';
 
-  // CLAUDE.md
-  files.set('CLAUDE.md', generateClaudeMd(options.project));
+  // Project instructions file
+  const instructionsPath = isCopilot ? '.github/copilot-instructions.md' : 'CLAUDE.md';
+  files.set(instructionsPath, generateClaudeMd(options.project));
 
-  // CLAUDE.local.md
+  // Local config
   if (options.local) {
-    files.set('CLAUDE.local.md', generateClaudeLocalMd(options.local));
+    const localPath = isCopilot ? '.vscode/local-notes.md' : 'CLAUDE.local.md';
+    files.set(localPath, generateClaudeLocalMd(options.local));
   }
 
   // Default agents based on project
@@ -587,19 +605,23 @@ export function scaffold(options: ScaffoldOptions): ScaffoldResult {
   // Generate agent files
   for (const agent of agents) {
     const category = agent.category || 'core';
-    const path = `.claude/agents/${category}/${agent.name}.md`;
-    files.set(path, generateAgentMd(agent));
+    const agentPath = isCopilot
+      ? `.github/agents/${agent.name}.agent.md`
+      : `.claude/agents/${category}/${agent.name}.md`;
+    files.set(agentPath, generateAgentMd(agent));
   }
 
-  // Generate agent index
-  if (agents.length > 0) {
+  // Generate agent index (Claude Code only — Copilot uses directory convention)
+  if (!isCopilot && agents.length > 0) {
     files.set('.claude/agents/index.yaml', generateAgentIndex(agents));
   }
 
   // Generate skill files
   for (const skill of skills) {
-    const path = `.claude/skills/${skill.name}/SKILL.md`;
-    files.set(path, generateSkillMd(skill));
+    const skillPath = isCopilot
+      ? `.github/skills/${skill.name}/SKILL.md`
+      : `.claude/skills/${skill.name}/SKILL.md`;
+    files.set(skillPath, generateSkillMd(skill));
   }
 
   return { files };
@@ -736,7 +758,7 @@ function getDefaultAgents(profile: ProjectProfile): AgentDefinition[] {
     priority: 'high',
     instructions: [
       `Write clean, idiomatic ${profile.languages.join('/')} code.`,
-      'Follow the coding standards defined in CLAUDE.md.',
+      'Follow the coding standards defined in the project instructions.','
       'Prefer editing existing files over creating new ones.',
       'Run tests after making changes.',
     ].join('\n'),
@@ -867,7 +889,7 @@ function getDefaultSkills(profile: ProjectProfile): SkillDefinition[] {
       instructions: [
         '## Guidance Control Plane',
         '',
-        'This project uses `@claude-flow/guidance` to enforce CLAUDE.md rules programmatically.',
+        'This project uses `@claude-flow/guidance` to enforce project rules programmatically.',
         '',
         '### Before executing commands:',
         '```typescript',

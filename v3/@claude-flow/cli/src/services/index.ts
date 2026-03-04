@@ -29,7 +29,6 @@ export {
   type HeadlessExecutorConfig,
   type HeadlessOptions,
   type PoolStatus,
-  type SandboxMode,
   type ModelType,
   type OutputFormat,
   type ExecutionMode,

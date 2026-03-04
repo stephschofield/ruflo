@@ -1,7 +1,10 @@
 /**
  * V3 Init System Types
- * Configuration options for initializing Claude Code integration
+ * Configuration options for initializing Copilot / Claude Code integration
  */
+
+/** Target platform for init output */
+export type InitPlatform = 'copilot' | 'claude-code';
 
 import os from 'os';
 import path from 'path';
@@ -10,24 +13,30 @@ import path from 'path';
  * Components that can be initialized
  */
 export interface InitComponents {
-  /** Create .claude/settings.json with hooks */
+  /** Create .claude/settings.json with hooks (Claude Code only) */
   settings: boolean;
-  /** Copy skills to .claude/skills/ */
+  /** Copy skills to .github/skills/ (Copilot) or .claude/skills/ (Claude Code) */
   skills: boolean;
-  /** Copy commands to .claude/commands/ */
+  /** Copy commands to .claude/commands/ (Claude Code only) */
   commands: boolean;
-  /** Copy agents to .claude/agents/ */
+  /** Copy agents to .github/agents/ (Copilot) or .claude/agents/ (Claude Code) */
   agents: boolean;
-  /** Create helper scripts in .claude/helpers/ */
+  /** Create helper scripts in .claude/helpers/ (Claude Code only) */
   helpers: boolean;
-  /** Configure statusline */
+  /** Configure statusline (Claude Code only) */
   statusline: boolean;
-  /** Create MCP configuration */
+  /** Create MCP configuration (.vscode/mcp.json for Copilot, .mcp.json for Claude Code) */
   mcp: boolean;
   /** Create .claude-flow/ directory (V3 runtime) */
   runtime: boolean;
-  /** Create CLAUDE.md with swarm guidance */
+  /** Create CLAUDE.md with swarm guidance (Claude Code) */
   claudeMd: boolean;
+  /** Create .github/copilot-instructions.md (Copilot) */
+  copilotInstructions: boolean;
+  /** Create .github/prompts/*.prompt.md (Copilot) */
+  prompts: boolean;
+  /** Create .github/hooks/*.json (Copilot) */
+  hooks: boolean;
 }
 
 /**
@@ -166,6 +175,8 @@ export interface MCPConfig {
   autoStart: boolean;
   /** Server port */
   port: number;
+  /** Tool profile: controls which tool categories are exposed to the host */
+  toolProfile?: 'default' | 'full' | 'minimal';
 }
 
 /**
@@ -284,6 +295,8 @@ export interface InitOptions {
   force: boolean;
   /** Run in interactive mode */
   interactive: boolean;
+  /** Target platform: 'copilot' (default) or 'claude-code' */
+  platform: InitPlatform;
   /** Components to initialize */
   components: InitComponents;
   /** Hooks configuration */
@@ -311,16 +324,20 @@ export const DEFAULT_INIT_OPTIONS: InitOptions = {
   targetDir: process.cwd(),
   force: false,
   interactive: true,
+  platform: 'copilot',
   components: {
-    settings: true,
+    settings: false,
     skills: true,
-    commands: true,
+    commands: false,
     agents: true,
-    helpers: true,
-    statusline: true,
+    helpers: false,
+    statusline: false,
     mcp: true,
     runtime: true,
-    claudeMd: true,
+    claudeMd: false,
+    copilotInstructions: true,
+    prompts: true,
+    hooks: true,
   },
   hooks: {
     preToolUse: true,
@@ -383,6 +400,7 @@ export const DEFAULT_INIT_OPTIONS: InitOptions = {
     flowNexus: false,
     autoStart: false,
     port: 3000,
+    toolProfile: 'default',
   },
   runtime: {
     topology: 'hierarchical-mesh',
@@ -411,7 +429,7 @@ export const DEFAULT_INIT_OPTIONS: InitOptions = {
 export const MINIMAL_INIT_OPTIONS: InitOptions = {
   ...DEFAULT_INIT_OPTIONS,
   components: {
-    settings: true,
+    settings: false,
     skills: true,
     commands: false,
     agents: false,
@@ -419,7 +437,10 @@ export const MINIMAL_INIT_OPTIONS: InitOptions = {
     statusline: false,
     mcp: true,
     runtime: true,
-    claudeMd: true,
+    claudeMd: false,
+    copilotInstructions: true,
+    prompts: false,
+    hooks: true,
   },
   hooks: {
     ...DEFAULT_INIT_OPTIONS.hooks,
@@ -487,6 +508,9 @@ export const FULL_INIT_OPTIONS: InitOptions = {
     mcp: true,
     runtime: true,
     claudeMd: true,
+    copilotInstructions: true,
+    prompts: true,
+    hooks: true,
   },
   skills: {
     core: true,
@@ -521,6 +545,28 @@ export const FULL_INIT_OPTIONS: InitOptions = {
     predownload: true,  // Pre-download for full init
     cacheSize: 256,
     neuralSubstrate: true,
+  },
+};
+
+/**
+ * Claude Code backward-compat init options
+ * Used when `npx ruflo init --claude-code` is passed
+ */
+export const CLAUDE_CODE_INIT_OPTIONS: Partial<InitOptions> = {
+  platform: 'claude-code',
+  components: {
+    settings: true,
+    skills: true,
+    commands: true,
+    agents: true,
+    helpers: true,
+    statusline: true,
+    mcp: true,
+    runtime: true,
+    claudeMd: true,
+    copilotInstructions: false,
+    prompts: false,
+    hooks: false,
   },
 };
 

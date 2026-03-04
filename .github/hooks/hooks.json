@@ -1,0 +1,53 @@
+{
+  "hooks": [
+    {
+      "event": "SessionStart",
+      "command": "npx ruflo hooks session-start --session-id \"$SESSION_ID\" --load-context",
+      "description": "Initialize ruflo session context and load patterns"
+    },
+    {
+      "event": "SessionStart",
+      "command": "node \"$(git rev-parse --show-toplevel)/.github/hooks/auto-memory-hook.mjs\" import",
+      "description": "Import auto memory files into bridge on session start"
+    },
+    {
+      "event": "UserPromptSubmit",
+      "command": "npx ruflo hooks pre-task --description \"$PROMPT\"",
+      "description": "Pre-process user prompts for routing and context enrichment"
+    },
+    {
+      "event": "PreToolUse",
+      "command": "npx ruflo hooks pre-edit --file \"$TOOL_INPUT_file_path\"",
+      "matcher": "^(Write|Edit|MultiEdit)$",
+      "description": "Pre-process file edit operations"
+    },
+    {
+      "event": "PostToolUse",
+      "command": "npx ruflo hooks post-edit --file \"$TOOL_INPUT_file_path\" --success \"$TOOL_SUCCESS\" --train-patterns",
+      "matcher": "^(Write|Edit|MultiEdit)$",
+      "description": "Post-process file edits for pattern learning"
+    },
+    {
+      "event": "PreToolUse",
+      "command": "npx ruflo hooks pre-command --command \"$TOOL_INPUT_command\"",
+      "matcher": "^Bash$",
+      "description": "Pre-process terminal commands for safety checks"
+    },
+    {
+      "event": "PostToolUse",
+      "command": "npx ruflo hooks post-command --command \"$TOOL_INPUT_command\" --success \"$TOOL_SUCCESS\"",
+      "matcher": "^Bash$",
+      "description": "Post-process terminal commands for learning"
+    },
+    {
+      "event": "Stop",
+      "command": "npx ruflo hooks session-end --session-id \"$SESSION_ID\" --export-metrics",
+      "description": "Export session metrics and save state on session end"
+    },
+    {
+      "event": "Stop",
+      "command": "node \"$(git rev-parse --show-toplevel)/.github/hooks/auto-memory-hook.mjs\" sync",
+      "description": "Sync insights back to auto memory files on session end"
+    }
+  ]
+}

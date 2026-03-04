@@ -138,7 +138,7 @@ export const bottleneckDetectTool: MCPTool = {
         type: 'object',
         properties: {
           format: { type: 'string', enum: ['otlp', 'chrome_devtools', 'jaeger', 'zipkin'] },
-          spans: { type: 'array' },
+          spans: { type: 'array', items: { type: 'object' } },
           metrics: { type: 'object' },
         },
       },
@@ -222,7 +222,7 @@ export const memoryAnalyzeTool: MCPTool = {
     type: 'object',
     properties: {
       heapSnapshot: { type: 'string' },
-      timeline: { type: 'array' },
+      timeline: { type: 'array', items: { type: 'object' } },
       analysis: { type: 'array', items: { type: 'string' } },
       compareBaseline: { type: 'string' },
     },

@@ -21,7 +21,7 @@ import { spawn, exec, type ChildProcess } from 'child_process';
 import { promisify } from 'util';
 import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
-import type { HeadlessWorkerType, HeadlessExecutionResult, SandboxMode } from './headless-worker-executor.js';
+import type { HeadlessWorkerType, HeadlessExecutionResult } from './headless-worker-executor.js';
 
 const execAsync = promisify(exec);
 
@@ -86,8 +86,8 @@ export interface ContainerPoolConfig {
   /** Environment variables for containers */
   env?: Record<string, string>;
 
-  /** Default sandbox mode */
-  defaultSandbox: SandboxMode;
+  /** Default provider name */
+  defaultProvider: string;
 }
 
 /**
@@ -97,7 +97,7 @@ export interface ContainerExecutionOptions {
   workerType: HeadlessWorkerType;
   prompt: string;
   contextPatterns?: string[];
-  sandbox?: SandboxMode;
+  provider?: string;
   model?: string;
   timeoutMs?: number;
 }
@@ -132,7 +132,7 @@ const DEFAULT_CONFIG: ContainerPoolConfig = {
   idleTimeoutMs: 300000, // 5 minutes
   workspacePath: '/workspace',
   statePath: '.claude-flow/container-pool',
-  defaultSandbox: 'strict',
+  defaultProvider: 'anthropic',
 };
 
 // ============================================
@@ -422,8 +422,8 @@ export class ContainerWorkerPool extends EventEmitter {
       const env = {
         ...this.config.env,
         ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
-        CLAUDE_CODE_HEADLESS: 'true',
-        CLAUDE_CODE_SANDBOX_MODE: this.config.defaultSandbox,
+        CLAUDE_FLOW_HEADLESS: 'true',
+        CLAUDE_FLOW_PROVIDER: this.config.defaultProvider,
       };
 
       for (const [key, value] of Object.entries(env)) {
@@ -539,7 +539,7 @@ export class ContainerWorkerPool extends EventEmitter {
         parsedOutput: this.tryParseJson(output),
         durationMs: Date.now() - startTime,
         model: options.model || 'sonnet',
-        sandboxMode: options.sandbox || this.config.defaultSandbox,
+        provider: options.provider || this.config.defaultProvider,
         workerType: options.workerType,
         timestamp: new Date(),
         executionId,
@@ -769,7 +769,7 @@ export class ContainerWorkerPool extends EventEmitter {
       output: '',
       durationMs: 0,
       model: 'unknown',
-      sandboxMode: this.config.defaultSandbox,
+      provider: this.config.defaultProvider,
       workerType,
       timestamp: new Date(),
       executionId: `error_${Date.now()}`,

@@ -1,6 +1,12 @@
 /**
  * @claude-flow/teammate-plugin
  *
+ * @deprecated This plugin is deprecated. Use Copilot native subagent patterns
+ * (runSubagent tool) instead. The TeammateTool bridge was designed for Claude
+ * Code v2.1.19+ and is no longer needed with Copilot's built-in agent support.
+ *
+ * Retained for backward compatibility with `--claude-code` mode only.
+ *
  * Native TeammateTool integration plugin for Claude Flow.
  * Bridges Claude Code v2.1.19+ multi-agent capabilities with Claude Flow.
  *

@@ -8,6 +8,7 @@ export {
   type InitOptions,
   type InitComponents,
   type InitResult,
+  type InitPlatform,
   type HooksConfig,
   type SkillsConfig,
   type CommandsConfig,
@@ -20,6 +21,7 @@ export {
   DEFAULT_INIT_OPTIONS,
   MINIMAL_INIT_OPTIONS,
   FULL_INIT_OPTIONS,
+  CLAUDE_CODE_INIT_OPTIONS,
   detectPlatform,
 } from './types.js';
 
@@ -27,12 +29,16 @@ export {
 export {
   generateSettings,
   generateSettingsJson,
+  generateCopilotSettings,
+  generateCopilotSettingsJson,
 } from './settings-generator.js';
 
 export {
   generateMCPConfig,
   generateMCPJson,
   generateMCPCommands,
+  generateCopilotMCPConfig,
+  generateCopilotMCPJson,
 } from './mcp-generator.js';
 
 export {

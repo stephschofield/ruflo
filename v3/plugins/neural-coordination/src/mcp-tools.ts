@@ -857,7 +857,7 @@ export const emergentProtocolTool: MCPTool = {
         description: 'Cooperative task requiring communication',
         properties: {
           type: { type: 'string' },
-          objectives: { type: 'array' },
+          objectives: { type: 'array', items: { type: 'string' } },
           constraints: { type: 'object' },
         },
       },

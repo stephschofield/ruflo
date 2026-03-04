@@ -1,6 +1,8 @@
 /**
- * Settings.json Generator
- * Creates .claude/settings.json with V3-optimized hook configurations
+ * Settings Generator
+ * Creates platform-specific settings files:
+ * - Claude Code: .claude/settings.json
+ * - Copilot: .vscode/settings.json
  */
 
 import type { InitOptions, HooksConfig } from './types.js';
@@ -331,9 +333,75 @@ function generateHooksConfig(config: HooksConfig): object {
 }
 
 /**
- * Generate settings.json as formatted string
+ * Generate Claude Code settings.json as formatted string
  */
 export function generateSettingsJson(options: InitOptions): string {
   const settings = generateSettings(options);
+  return JSON.stringify(settings, null, 2);
+}
+
+/**
+ * Generate Copilot-native .vscode/settings.json content
+ * Contains Ruflo runtime configuration without Claude Code-specific fields.
+ */
+export function generateCopilotSettings(options: InitOptions): object {
+  const settings: Record<string, unknown> = {};
+
+  // Ruflo runtime configuration
+  settings['ruflo'] = {
+    version: '3.0.0',
+    enabled: true,
+    swarm: {
+      topology: options.runtime.topology,
+      maxAgents: options.runtime.maxAgents,
+    },
+    memory: {
+      backend: options.runtime.memoryBackend,
+      enableHNSW: options.runtime.enableHNSW,
+      learningBridge: { enabled: options.runtime.enableLearningBridge ?? true },
+      memoryGraph: { enabled: options.runtime.enableMemoryGraph ?? true },
+      agentScopes: { enabled: options.runtime.enableAgentScopes ?? true },
+    },
+    neural: {
+      enabled: options.runtime.enableNeural,
+    },
+    daemon: {
+      autoStart: true,
+      workers: [
+        'map',
+        'audit',
+        'optimize',
+        'consolidate',
+        'testgaps',
+        'ultralearn',
+        'deepdive',
+        'document',
+        'refactor',
+        'benchmark',
+      ],
+    },
+    learning: {
+      enabled: true,
+      autoTrain: true,
+      patterns: ['coordination', 'optimization', 'prediction'],
+    },
+    security: {
+      autoScan: true,
+      scanOnEdit: true,
+      cveCheck: true,
+    },
+  };
+
+  // GitHub Copilot chat settings
+  settings['github.copilot.chat.agent.thinkingProcess'] = true;
+
+  return settings;
+}
+
+/**
+ * Generate Copilot .vscode/settings.json as formatted string
+ */
+export function generateCopilotSettingsJson(options: InitOptions): string {
+  const settings = generateCopilotSettings(options);
   return JSON.stringify(settings, null, 2);
 }

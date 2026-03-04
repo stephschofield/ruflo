@@ -1,9 +1,9 @@
 /**
- * Official Claude Code Hooks Bridge
+ * Official Copilot Hooks Bridge
  *
- * Maps V3 internal hook events to official Claude Code hook events.
- * This bridge enables seamless integration between claude-flow's
- * internal hook system and the official Claude Code plugin API.
+ * Maps V3 internal hook events to official Copilot hook events.
+ * This bridge enables seamless integration between ruflo's
+ * internal hook system and the official Copilot hook protocol.
  *
  * @module v3/hooks/bridge/official-hooks-bridge
  */
@@ -11,16 +11,15 @@
 import { HookEvent, HookPriority, type HookHandler, type HookContext, type HookResult } from '../types.js';
 
 /**
- * Official Claude Code hook event types
- * Based on https://code.claude.com/docs/en/hooks
+ * Official Copilot hook event types
+ * Based on the Copilot hooks protocol
  */
 export type OfficialHookEvent =
   | 'PreToolUse'
   | 'PostToolUse'
   | 'UserPromptSubmit'
-  | 'PermissionRequest'
-  | 'Notification'
   | 'Stop'
+  | 'SubagentStart'
   | 'SubagentStop'
   | 'PreCompact'
   | 'SessionStart';
@@ -99,7 +98,7 @@ export const V3_TO_OFFICIAL_HOOK_MAP: Record<HookEvent, OfficialHookEvent | null
   [HookEvent.SessionRestore]: 'SessionStart',
 
   // Agent operations
-  [HookEvent.AgentSpawn]: 'PostToolUse', // matcher: Task
+  [HookEvent.AgentSpawn]: 'SubagentStart',
   [HookEvent.AgentTerminate]: 'SubagentStop',
 
   // Routing (internal)
@@ -123,7 +122,6 @@ export const V3_TOOL_MATCHERS: Partial<Record<HookEvent, string>> = {
   [HookEvent.PostCommand]: '^Bash$',
   [HookEvent.PreTask]: '^Task$',
   [HookEvent.PostTask]: '^Task$',
-  [HookEvent.AgentSpawn]: '^Task$',
 };
 
 /**
@@ -206,10 +204,10 @@ export class OfficialHooksBridge {
 
     // Map abort to decision
     if (result.abort) {
-      output.decision = event === 'PermissionRequest' ? 'deny' : 'block';
+      output.decision = 'block';
       output.continue = false;
     } else if (result.success) {
-      output.decision = event === 'PermissionRequest' ? 'allow' : 'continue';
+      output.decision = 'continue';
       output.continue = true;
     }
 
@@ -270,9 +268,8 @@ export class OfficialHooksBridge {
       PreToolUse: HookEvent.PreToolUse,
       PostToolUse: HookEvent.PostToolUse,
       UserPromptSubmit: HookEvent.PreTask,
-      PermissionRequest: HookEvent.PreToolUse,
-      Notification: HookEvent.PostTask, // Closest match
       Stop: HookEvent.SessionEnd,
+      SubagentStart: HookEvent.AgentSpawn,
       SubagentStop: HookEvent.AgentTerminate,
       PreCompact: HookEvent.SessionEnd, // Closest match
       SessionStart: HookEvent.SessionStart,
@@ -299,7 +296,7 @@ export class OfficialHooksBridge {
    * Create a CLI command for a V3 hook handler
    */
   static createCLICommand(event: HookEvent, handler: string): string {
-    const baseCommand = 'npx claude-flow@alpha hooks';
+    const baseCommand = 'npx ruflo hooks';
 
     switch (event) {
       case HookEvent.PreEdit:
@@ -325,7 +322,7 @@ export class OfficialHooksBridge {
 }
 
 /**
- * Process stdin from official Claude Code hook system
+ * Process stdin from official Copilot hook system
  */
 export async function processOfficialHookInput(): Promise<OfficialHookInput | null> {
   return new Promise((resolve) => {
@@ -357,7 +354,7 @@ export async function processOfficialHookInput(): Promise<OfficialHookInput | nu
 }
 
 /**
- * Output result to official Claude Code hook system
+ * Output result to official Copilot hook system
  */
 export function outputOfficialHookResult(output: OfficialHookOutput): void {
   console.log(JSON.stringify(output));

@@ -169,7 +169,7 @@ export const embedHierarchyTool: MCPTool = {
               },
             },
           },
-          edges: { type: 'array' },
+          edges: { type: 'array', items: { type: 'object' } },
         },
       },
       model: { type: 'string', enum: ['poincare_ball', 'lorentz', 'klein', 'half_plane'] },

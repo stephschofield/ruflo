@@ -10,7 +10,6 @@
  *
  * Environment:
  *   CLAUDE_FLOW_HEADLESS=true
- *   CLAUDE_CODE_HEADLESS=true
  *
  * @module v3/cli/runtime/headless
  */
@@ -119,7 +118,6 @@ Options:
 
 Environment:
   CLAUDE_FLOW_HEADLESS=true   Enable headless mode
-  CLAUDE_CODE_HEADLESS=true   Enable Claude Code headless
 
 Examples:
   headless --worker audit --timeout 120000
@@ -143,7 +141,7 @@ async function runWorker(workerType: HeadlessWorkerType, timeout: number): Promi
     const result = await executor.execute(workerType, {
       timeoutMs: timeout,
       model: 'sonnet',
-      sandbox: 'permissive'
+      provider: 'anthropic'
     });
 
     if (result.success) {
@@ -303,7 +301,6 @@ async function showStatus(): Promise<void> {
 
   console.log('\nEnvironment:');
   console.log(`  CLAUDE_FLOW_HEADLESS: ${process.env.CLAUDE_FLOW_HEADLESS || 'not set'}`);
-  console.log(`  CLAUDE_CODE_HEADLESS: ${process.env.CLAUDE_CODE_HEADLESS || 'not set'}`);
   console.log(`  NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
 }
 

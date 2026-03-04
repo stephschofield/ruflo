@@ -1,10 +1,10 @@
 /**
  * MCP Configuration Generator
- * Creates .mcp.json for Claude Code MCP server integration
+ * Creates MCP config for Copilot (.vscode/mcp.json) or Claude Code (.mcp.json)
  * Handles cross-platform compatibility (Windows requires cmd /c wrapper)
  */
 
-import type { InitOptions, MCPConfig } from './types.js';
+import type { InitOptions, MCPConfig, InitPlatform } from './types.js';
 
 /**
  * Check if running on Windows
@@ -63,6 +63,7 @@ export function generateMCPConfig(options: InitOptions): object {
         CLAUDE_FLOW_TOPOLOGY: options.runtime.topology,
         CLAUDE_FLOW_MAX_AGENTS: String(options.runtime.maxAgents),
         CLAUDE_FLOW_MEMORY_BACKEND: options.runtime.memoryBackend,
+        RUFLO_TOOL_PROFILE: config.toolProfile || 'default',
       },
       { autoStart: config.autoStart }
     );
@@ -90,10 +91,45 @@ export function generateMCPConfig(options: InitOptions): object {
 }
 
 /**
- * Generate .mcp.json as formatted string
+ * Generate .mcp.json as formatted string (Claude Code format)
  */
 export function generateMCPJson(options: InitOptions): string {
   const config = generateMCPConfig(options);
+  return JSON.stringify(config, null, 2);
+}
+
+/**
+ * Generate .vscode/mcp.json for Copilot
+ * Copilot uses { "servers": { ... } } format
+ */
+export function generateCopilotMCPConfig(options: InitOptions): object {
+  const config = options.mcp;
+  const servers: Record<string, object> = {};
+
+  // Ruflo MCP server (core)
+  if (config.claudeFlow) {
+    servers['ruflo'] = createMCPServerEntry(
+      ['ruflo', 'mcp', 'start'],
+      {
+        npm_config_update_notifier: 'false',
+        CLAUDE_FLOW_MODE: 'v3',
+        CLAUDE_FLOW_HOOKS_ENABLED: 'true',
+        CLAUDE_FLOW_TOPOLOGY: options.runtime.topology,
+        CLAUDE_FLOW_MAX_AGENTS: String(options.runtime.maxAgents),
+        CLAUDE_FLOW_MEMORY_BACKEND: options.runtime.memoryBackend,
+        RUFLO_TOOL_PROFILE: config.toolProfile || 'default',
+      },
+    );
+  }
+
+  return { servers };
+}
+
+/**
+ * Generate .vscode/mcp.json as formatted string (Copilot format)
+ */
+export function generateCopilotMCPJson(options: InitOptions): string {
+  const config = generateCopilotMCPConfig(options);
   return JSON.stringify(config, null, 2);
 }
 

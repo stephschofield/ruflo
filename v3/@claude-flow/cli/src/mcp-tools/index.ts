@@ -21,3 +21,19 @@ export { transferTools } from './transfer-tools.js';
 export { securityTools } from './security-tools.js';
 export { embeddingsTools } from './embeddings-tools.js';
 export { claimsTools } from './claims-tools.js';
+export { dashboardTools } from './dashboard-tools.js';
+
+// Tool categorization & profiles (Phase 4)
+export {
+  type ToolCategory,
+  type ToolProfileName,
+  type ToolProfile,
+  type CategoryInfo,
+  CATEGORY_INFO,
+  TOOL_PROFILES,
+  resolveProfileName,
+  getProfileCategories,
+  isCategoryAllowed,
+  listProfileCategories,
+  estimateProfileToolCount,
+} from './tool-categories.js';
