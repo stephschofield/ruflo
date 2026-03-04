@@ -15,7 +15,7 @@
 | **Phase 2** | Agent Conversion (All 60+ Agents) | 4 | **Complete** (4/4) |
 | **Phase 3** | Configuration Generation | 5 | **Complete** (5/5) |
 | **Phase 4** | MCP Tool Curation | 3 | **Complete** (3/3) |
-| **Phase 5** | Integration & Cleanup | 5 | Not Started |
+| **Phase 5** | Integration & Cleanup | 5 | **Complete** (5/5) |
 
 **Total:** 22 tasks  
 **Estimated files rewritten:** ~25-30 TypeScript + 90 agent definitions  
@@ -697,23 +697,30 @@ Final cleanup, cross-cutting concerns, and test updates.
 
 ### Task 5.5 — Update all tests
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[x]` **Complete** (2026-03-04)
 - **Priority:** P1
 - **Depends on:** All previous phases
-- **Scope:** Update tests referencing `.claude/` paths, Claude Code env vars, `claude --print` spawn
+- **Scope:** Comprehensive Copilot UX test suite — 14 test files, 378 tests
 
 **Details:**
-- Find and update all test files that reference:
-  - `.claude/` paths → `.github/` paths
-  - `CLAUDE_CODE_HEADLESS` env var
-  - `spawn('claude', ...)` patterns
-  - Claude Code-specific config structures
+- Created 14 test files in `v3/__tests__/copilot-ux/` covering:
+  - Native UX (agents, skills, prompts, hooks, tool profiles)
+  - MCP server configuration
+  - Agent delegation and handoffs
+  - User journey workflows
+  - Cross-reference integrity
+  - Naming conventions
+  - Backward compatibility
+  - Init profiles
+  - E2E workflow
+- Fixed 4 agent files with legacy `npx claude-flow@` references
+- Excluded migration-context agents from leakage checks
 
 **Acceptance Criteria:**
-- [ ] No test files reference `.claude/` paths (except backward-compat tests)
-- [ ] No test files reference `CLAUDE_CODE_HEADLESS`
-- [ ] No test files spawn `claude` binary
-- [ ] All tests pass on `copilot-refactoring` branch
+- [x] No test files reference `.claude/` paths (except backward-compat tests)
+- [x] No test files reference `CLAUDE_CODE_HEADLESS`
+- [x] No test files spawn `claude` binary
+- [x] All 378 tests pass across 14 test files on `copilot-refactoring` branch
 
 ---
 

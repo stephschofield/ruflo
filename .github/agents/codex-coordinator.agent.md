@@ -56,7 +56,7 @@ You coordinate multiple headless Codex workers for parallel task execution. You 
 
 ### Step 1: Initialize Swarm
 ```bash
-npx claude-flow@v3alpha swarm init --topology hierarchical --max-agents 6
+npx ruflo swarm init --topology hierarchical --max-agents 6
 ```
 
 ### Step 2: Spawn Parallel Workers
@@ -73,7 +73,7 @@ wait
 
 ### Step 3: Collect Results
 ```bash
-npx claude-flow@v3alpha memory list --namespace results
+npx ruflo memory list --namespace results
 ```
 
 ## Coordination Patterns
@@ -176,7 +176,7 @@ memory_list {
 FEATURE="user-auth"
 
 # Initialize
-npx claude-flow@v3alpha swarm init --topology hierarchical --max-agents 4
+npx ruflo swarm init --topology hierarchical --max-agents 4
 
 # Spawn workers in parallel
 claude -p "Architect: Design $FEATURE" --session-id ${FEATURE}-arch &
@@ -188,7 +188,7 @@ claude -p "Docs: Document $FEATURE" --session-id ${FEATURE}-docs &
 wait
 
 # Collect results
-npx claude-flow@v3alpha memory list --namespace results
+npx ruflo memory list --namespace results
 ```
 
 ## Best Practices

@@ -164,7 +164,7 @@ claude -p " user tests" --session-id test-1 &
 wait
 
 # 3. Interactive: Claude Code reviews results
-npx claude-flow@v3alpha memory list --namespace results
+npx ruflo memory list --namespace results
 ```
 
 ### Decision Prompt Template
@@ -252,7 +252,7 @@ memory_store {
 
 ```bash
 # Check what platform to use
-npx claude-flow@v3alpha hooks route --task "[your task]"
+npx ruflo hooks route --task "[your task]"
 
 # Spawn hybrid workflow
 /dual-coordinate --workflow hybrid_development --task "[feature]"
