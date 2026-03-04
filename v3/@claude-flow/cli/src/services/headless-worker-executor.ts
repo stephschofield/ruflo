@@ -1,29 +1,36 @@
 /**
  * Headless Worker Executor
- * Enables workers to invoke Claude Code in headless mode with configurable sandbox profiles.
+ * Executes background workers via provider-agnostic LLM API calls.
  *
  * ADR-020: Headless Worker Integration Architecture
- * - Integrates with CLAUDE_CODE_HEADLESS and CLAUDE_CODE_SANDBOX_MODE environment variables
- * - Provides process pool for concurrent execution
+ * - Uses @claude-flow/providers ILLMProvider interface for LLM calls
+ * - Provides request pool for concurrent execution
  * - Builds context from file glob patterns
  * - Supports prompt templates and output parsing
  * - Implements timeout and graceful error handling
  *
  * Key Features:
- * - Process pool with configurable maxConcurrent
+ * - Request pool with configurable maxConcurrent
  * - Context building from file glob patterns with caching
  * - Prompt template system with context injection
  * - Output parsing (text, json, markdown)
- * - Timeout handling with graceful termination
+ * - Timeout handling with AbortController
  * - Execution logging for debugging
  * - Event emission for monitoring
+ * - Provider/model configurable per-worker and globally
  */
 
-import { spawn, execSync, type ChildProcess } from 'child_process';
 import { EventEmitter } from 'events';
 import { existsSync, readFileSync, readdirSync, mkdirSync, writeFileSync } from 'fs';
-import { join, relative } from 'path';
+import { join } from 'path';
 import type { WorkerType } from './worker-daemon.js';
+import type {
+  ILLMProvider,
+  LLMRequest,
+  LLMResponse,
+  LLMModel,
+  LLMProvider as LLMProviderType,
+} from '@claude-flow/providers';
 
 // ============================================
 // Type Definitions
@@ -48,12 +55,7 @@ export type HeadlessWorkerType =
 export type LocalWorkerType = 'map' | 'consolidate' | 'benchmark' | 'preload';
 
 /**
- * Sandbox mode for headless execution
- */
-export type SandboxMode = 'strict' | 'permissive' | 'disabled';
-
-/**
- * Model types for Claude Code
+ * Model types (logical names mapped to provider-specific model IDs)
  */
 export type ModelType = 'sonnet' | 'opus' | 'haiku';
 
@@ -91,11 +93,8 @@ export interface WorkerConfig {
  * Headless-specific options
  */
 export interface HeadlessOptions {
-  /** Prompt template for Claude Code */
+  /** Prompt template for LLM */
   promptTemplate: string;
-
-  /** Sandbox profile: strict, permissive, or disabled */
-  sandbox: SandboxMode;
 
   /** Model to use: sonnet, opus, or haiku */
   model?: ModelType;
@@ -111,6 +110,12 @@ export interface HeadlessOptions {
 
   /** Output parsing format */
   outputFormat?: OutputFormat;
+
+  /** Override provider for this worker (e.g. 'anthropic', 'openai') */
+  provider?: LLMProviderType;
+
+  /** Temperature for LLM generation */
+  temperature?: number;
 }
 
 /**
@@ -128,7 +133,7 @@ export interface HeadlessWorkerConfig extends WorkerConfig {
  * Executor configuration options
  */
 export interface HeadlessExecutorConfig {
-  /** Maximum concurrent headless processes */
+  /** Maximum concurrent LLM requests */
   maxConcurrent?: number;
 
   /** Default timeout in milliseconds */
@@ -157,7 +162,7 @@ export interface HeadlessExecutionResult {
   /** Whether execution completed successfully */
   success: boolean;
 
-  /** Raw output from Claude Code */
+  /** Raw output from LLM */
   output: string;
 
   /** Parsed output (if outputFormat is json or markdown) */
@@ -166,14 +171,14 @@ export interface HeadlessExecutionResult {
   /** Execution duration in milliseconds */
   durationMs: number;
 
-  /** Estimated tokens used (if available) */
+  /** Tokens used */
   tokensUsed?: number;
 
   /** Model used for execution */
   model: string;
 
-  /** Sandbox mode used */
-  sandboxMode: SandboxMode;
+  /** Provider used for execution */
+  provider: string;
 
   /** Worker type that was executed */
   workerType: HeadlessWorkerType;
@@ -189,10 +194,10 @@ export interface HeadlessExecutionResult {
 }
 
 /**
- * Process pool entry
+ * Active request entry
  */
 interface PoolEntry {
-  process: ChildProcess;
+  abortController: AbortController;
   executionId: string;
   workerType: HeadlessWorkerType;
   startTime: Date;
@@ -226,6 +231,7 @@ export interface PoolStatus {
   activeCount: number;
   queueLength: number;
   maxConcurrent: number;
+  providerAvailable: boolean;
   activeWorkers: Array<{
     executionId: string;
     workerType: HeadlessWorkerType;
@@ -268,12 +274,12 @@ export const LOCAL_WORKER_TYPES: LocalWorkerType[] = [
 ];
 
 /**
- * Model ID mapping
+ * Default model ID mapping (provider-specific, configurable)
  */
-const MODEL_IDS: Record<ModelType, string> = {
-  sonnet: 'claude-sonnet-4-5-20250929',
-  opus: 'claude-opus-4-6',
-  haiku: 'claude-haiku-4-5-20251001',
+const DEFAULT_MODEL_IDS: Record<ModelType, LLMModel> = {
+  sonnet: 'claude-3-5-sonnet-latest',
+  opus: 'claude-3-opus-20240229',
+  haiku: 'claude-3-haiku-20240307',
 };
 
 /**
@@ -301,7 +307,6 @@ Provide a JSON report with:
   "riskScore": 0-100,
   "recommendations": ["..."]
 }`,
-      sandbox: 'strict',
       model: 'haiku',
       outputFormat: 'json',
       contextPatterns: ['**/*.ts', '**/*.js', '**/.env*', '**/package.json'],
@@ -325,7 +330,6 @@ Provide a JSON report with:
 - Find redundant computations
 
 Provide actionable suggestions with code examples.`,
-      sandbox: 'permissive',
       model: 'sonnet',
       outputFormat: 'markdown',
       contextPatterns: ['src/**/*.ts', 'src/**/*.tsx'],
@@ -349,7 +353,6 @@ Provide actionable suggestions with code examples.`,
 - Identify integration test gaps
 
 For each gap, provide a test skeleton.`,
-      sandbox: 'permissive',
       model: 'sonnet',
       outputFormat: 'markdown',
       contextPatterns: ['src/**/*.ts', 'tests/**/*.ts', '__tests__/**/*.ts'],
@@ -373,7 +376,6 @@ For each gap, provide a test skeleton.`,
 - Generate usage examples
 
 Focus on public APIs and exported functions.`,
-      sandbox: 'permissive',
       model: 'haiku',
       outputFormat: 'markdown',
       contextPatterns: ['src/**/*.ts'],
@@ -403,7 +405,6 @@ Provide insights as JSON:
   "domains": ["..."],
   "insights": ["..."]
 }`,
-      sandbox: 'strict',
       model: 'opus',
       outputFormat: 'json',
       contextPatterns: ['**/*.ts', '**/CLAUDE.md', '**/README.md'],
@@ -427,7 +428,6 @@ Provide insights as JSON:
 - Suggest module reorganization
 
 Provide before/after code examples.`,
-      sandbox: 'permissive',
       model: 'sonnet',
       outputFormat: 'markdown',
       contextPatterns: ['src/**/*.ts'],
@@ -451,7 +451,6 @@ Provide before/after code examples.`,
 - Analyze error handling
 
 Provide comprehensive report.`,
-      sandbox: 'strict',
       model: 'opus',
       outputFormat: 'markdown',
       contextPatterns: ['src/**/*.ts'],
@@ -480,7 +479,6 @@ Provide preload suggestions as JSON:
   "docsToReference": ["..."],
   "confidence": 0.0-1.0
 }`,
-      sandbox: 'strict',
       model: 'haiku',
       outputFormat: 'json',
       contextPatterns: ['.claude-flow/metrics/*.json'],
@@ -556,8 +554,8 @@ export function isLocalWorker(type: WorkerType): type is LocalWorkerType {
 /**
  * Get model ID from model type
  */
-export function getModelId(model: ModelType): string {
-  return MODEL_IDS[model];
+export function getModelId(model: ModelType): LLMModel {
+  return DEFAULT_MODEL_IDS[model];
 }
 
 /**
@@ -578,28 +576,35 @@ export function getWorkerConfig(type: WorkerType): HeadlessWorkerConfig | undefi
 // ============================================
 
 /**
- * HeadlessWorkerExecutor - Executes workers using Claude Code in headless mode
+ * HeadlessWorkerExecutor - Executes workers via provider-agnostic LLM API calls
  *
  * Features:
- * - Process pool with configurable concurrency limit
+ * - Request pool with configurable concurrency limit
  * - Pending queue for overflow requests
  * - Context caching with configurable TTL
  * - Execution logging for debugging
  * - Event emission for monitoring
- * - Graceful termination
+ * - Provider/model configurable per-worker and globally
  */
 export class HeadlessWorkerExecutor extends EventEmitter {
   private projectRoot: string;
   private config: Required<HeadlessExecutorConfig>;
-  private processPool: Map<string, PoolEntry> = new Map();
+  private activeRequests: Map<string, PoolEntry> = new Map();
   private pendingQueue: QueueEntry[] = [];
   private contextCache: Map<string, CacheEntry> = new Map();
-  private claudeCodeAvailable: boolean | null = null;
-  private claudeCodeVersion: string | null = null;
+  private llmProvider: ILLMProvider | null = null;
+  private modelIds: Record<ModelType, LLMModel>;
 
-  constructor(projectRoot: string, options?: HeadlessExecutorConfig) {
+  constructor(
+    projectRoot: string,
+    options?: HeadlessExecutorConfig,
+    provider?: ILLMProvider,
+    modelIds?: Partial<Record<ModelType, LLMModel>>
+  ) {
     super();
     this.projectRoot = projectRoot;
+    this.llmProvider = provider ?? null;
+    this.modelIds = { ...DEFAULT_MODEL_IDS, ...modelIds };
 
     // Merge with defaults
     this.config = {
@@ -621,37 +626,55 @@ export class HeadlessWorkerExecutor extends EventEmitter {
   // ============================================
 
   /**
-   * Check if Claude Code CLI is available
+   * Set the LLM provider (can be swapped at runtime)
+   */
+  setProvider(provider: ILLMProvider): void {
+    this.llmProvider = provider;
+    this.emit('providerChanged', { provider: provider.name });
+  }
+
+  /**
+   * Get the current LLM provider
+   */
+  getProvider(): ILLMProvider | null {
+    return this.llmProvider;
+  }
+
+  /**
+   * Set custom model IDs (override defaults)
+   */
+  setModelIds(modelIds: Partial<Record<ModelType, LLMModel>>): void {
+    this.modelIds = { ...this.modelIds, ...modelIds };
+  }
+
+  /**
+   * Check if an LLM provider is configured and available
    */
   async isAvailable(): Promise<boolean> {
-    if (this.claudeCodeAvailable !== null) {
-      return this.claudeCodeAvailable;
+    if (!this.llmProvider) {
+      this.emit('status', { available: false, reason: 'No LLM provider configured' });
+      return false;
     }
 
     try {
-      const output = execSync('claude --version', {
-        encoding: 'utf-8',
-        stdio: 'pipe',
-        timeout: 5000,
-        windowsHide: true, // Prevent phantom console windows on Windows
-      });
-      this.claudeCodeAvailable = true;
-      this.claudeCodeVersion = output.trim();
-      this.emit('status', { available: true, version: this.claudeCodeVersion });
-      return true;
+      const health = await this.llmProvider.healthCheck();
+      this.emit('status', { available: health.healthy, provider: this.llmProvider.name });
+      return health.healthy;
     } catch {
-      this.claudeCodeAvailable = false;
-      this.emit('status', { available: false });
+      this.emit('status', { available: false, provider: this.llmProvider.name });
       return false;
     }
   }
 
   /**
-   * Get Claude Code version
+   * Get provider info
    */
-  async getVersion(): Promise<string | null> {
-    await this.isAvailable();
-    return this.claudeCodeVersion;
+  getProviderInfo(): { name: string; model: string } | null {
+    if (!this.llmProvider) return null;
+    return {
+      name: this.llmProvider.name,
+      model: this.llmProvider.config.model,
+    };
   }
 
   /**
@@ -671,14 +694,14 @@ export class HeadlessWorkerExecutor extends EventEmitter {
     if (!available) {
       const result = this.createErrorResult(
         workerType,
-        'Claude Code CLI not available. Install with: npm install -g @anthropic-ai/claude-code'
+        'No LLM provider available. Configure a provider via setProvider().'
       );
       this.emit('error', result);
       return result;
     }
 
     // Check concurrent limit
-    if (this.processPool.size >= this.config.maxConcurrent) {
+    if (this.activeRequests.size >= this.config.maxConcurrent) {
       // Queue the request
       return new Promise((resolve, reject) => {
         const entry: QueueEntry = {
@@ -706,10 +729,11 @@ export class HeadlessWorkerExecutor extends EventEmitter {
   getPoolStatus(): PoolStatus {
     const now = Date.now();
     return {
-      activeCount: this.processPool.size,
+      activeCount: this.activeRequests.size,
       queueLength: this.pendingQueue.length,
       maxConcurrent: this.config.maxConcurrent,
-      activeWorkers: Array.from(this.processPool.values()).map((entry) => ({
+      providerAvailable: this.llmProvider !== null,
+      activeWorkers: Array.from(this.activeRequests.values()).map((entry) => ({
         executionId: entry.executionId,
         workerType: entry.workerType,
         startTime: entry.startTime,
@@ -727,21 +751,21 @@ export class HeadlessWorkerExecutor extends EventEmitter {
    * Get number of active executions
    */
   getActiveCount(): number {
-    return this.processPool.size;
+    return this.activeRequests.size;
   }
 
   /**
    * Cancel a running execution
    */
   cancel(executionId: string): boolean {
-    const entry = this.processPool.get(executionId);
+    const entry = this.activeRequests.get(executionId);
     if (!entry) {
       return false;
     }
 
     clearTimeout(entry.timeout);
-    entry.process.kill('SIGTERM');
-    this.processPool.delete(executionId);
+    entry.abortController.abort();
+    this.activeRequests.delete(executionId);
     this.emit('cancelled', { executionId });
 
     // Process next in queue
@@ -756,15 +780,15 @@ export class HeadlessWorkerExecutor extends EventEmitter {
   cancelAll(): number {
     let cancelled = 0;
 
-    // Cancel active processes (convert to array to avoid iterator issues)
-    const entries = Array.from(this.processPool.entries());
+    // Cancel active requests (convert to array to avoid iterator issues)
+    const entries = Array.from(this.activeRequests.entries());
     for (const [executionId, entry] of entries) {
       clearTimeout(entry.timeout);
-      entry.process.kill('SIGTERM');
+      entry.abortController.abort();
       this.emit('cancelled', { executionId });
       cancelled++;
     }
-    this.processPool.clear();
+    this.activeRequests.clear();
 
     // Reject pending queue
     for (const entry of this.pendingQueue) {
@@ -834,8 +858,25 @@ export class HeadlessWorkerExecutor extends EventEmitter {
 
     const startTime = Date.now();
     const executionId = `${workerType}_${startTime}_${Math.random().toString(36).slice(2, 8)}`;
+    const abortController = new AbortController();
 
     this.emit('start', { executionId, workerType, config: headless });
+
+    // Setup timeout
+    const timeoutMs = headless.timeoutMs || this.config.defaultTimeoutMs;
+    const timeoutHandle = setTimeout(() => {
+      abortController.abort();
+    }, timeoutMs);
+
+    // Track in active requests
+    const poolEntry: PoolEntry = {
+      abortController,
+      executionId,
+      workerType,
+      startTime: new Date(),
+      timeout: timeoutHandle,
+    };
+    this.activeRequests.set(executionId, poolEntry);
 
     try {
       // Build context from file patterns
@@ -847,13 +888,15 @@ export class HeadlessWorkerExecutor extends EventEmitter {
       // Log prompt for debugging
       this.logExecution(executionId, 'prompt', fullPrompt);
 
-      // Execute Claude Code headlessly
-      const result = await this.executeClaudeCode(fullPrompt, {
-        sandbox: headless.sandbox,
+      // Execute via LLM provider API
+      const result = await this.executeLLMRequest(fullPrompt, {
         model: headless.model || 'sonnet',
-        timeoutMs: headless.timeoutMs || this.config.defaultTimeoutMs,
+        timeoutMs,
+        maxOutputTokens: headless.maxOutputTokens,
+        temperature: headless.temperature,
         executionId,
         workerType,
+        abortController,
       });
 
       // Parse output based on format
@@ -870,8 +913,8 @@ export class HeadlessWorkerExecutor extends EventEmitter {
         parsedOutput,
         durationMs: Date.now() - startTime,
         tokensUsed: result.tokensUsed,
-        model: headless.model || 'sonnet',
-        sandboxMode: headless.sandbox,
+        model: this.modelIds[headless.model || 'sonnet'],
+        provider: this.llmProvider?.name || 'unknown',
         workerType,
         timestamp: new Date(),
         executionId,
@@ -894,6 +937,8 @@ export class HeadlessWorkerExecutor extends EventEmitter {
 
       return executionResult;
     } finally {
+      clearTimeout(timeoutHandle);
+      this.activeRequests.delete(executionId);
       // Process next in queue
       this.processQueue();
     }
@@ -905,7 +950,7 @@ export class HeadlessWorkerExecutor extends EventEmitter {
   private processQueue(): void {
     while (
       this.pendingQueue.length > 0 &&
-      this.processPool.size < this.config.maxConcurrent
+      this.activeRequests.size < this.config.maxConcurrent
     ) {
       const next = this.pendingQueue.shift();
       if (!next) break;
@@ -1099,128 +1144,71 @@ Analyze the above codebase context and provide your response following the forma
   }
 
   /**
-   * Execute Claude Code in headless mode
+   * Execute an LLM request via the provider API
    */
-  private executeClaudeCode(
+  private async executeLLMRequest(
     prompt: string,
     options: {
-      sandbox: SandboxMode;
       model: ModelType;
       timeoutMs: number;
+      maxOutputTokens?: number;
+      temperature?: number;
       executionId: string;
       workerType: HeadlessWorkerType;
+      abortController: AbortController;
     }
   ): Promise<{ success: boolean; output: string; tokensUsed?: number; error?: string }> {
-    return new Promise((resolve) => {
-      const env: Record<string, string> = {
-        ...(process.env as Record<string, string>),
-        CLAUDE_CODE_HEADLESS: 'true',
-        CLAUDE_CODE_SANDBOX_MODE: options.sandbox,
+    if (!this.llmProvider) {
+      return { success: false, output: '', error: 'No LLM provider configured' };
+    }
+
+    const request: LLMRequest = {
+      messages: [
+        {
+          role: 'system',
+          content: `You are a specialized ${options.workerType} analysis worker. Provide thorough, actionable results.`,
+        },
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+      model: this.modelIds[options.model],
+      maxTokens: options.maxOutputTokens ?? 4096,
+      temperature: options.temperature ?? 0.3,
+    };
+
+    try {
+      const response: LLMResponse = await this.llmProvider.complete(request);
+
+      // Check if aborted during request
+      if (options.abortController.signal.aborted) {
+        return {
+          success: false,
+          output: response.content || '',
+          error: `Execution timed out after ${options.timeoutMs}ms`,
+        };
+      }
+
+      return {
+        success: true,
+        output: response.content,
+        tokensUsed: response.usage?.totalTokens,
       };
-
-      // Set model
-      env.ANTHROPIC_MODEL = MODEL_IDS[options.model];
-
-      // Spawn claude CLI process
-      const child = spawn('claude', ['--print', prompt], {
-        cwd: this.projectRoot,
-        env,
-        stdio: ['pipe', 'pipe', 'pipe'],
-        windowsHide: true, // Prevent phantom console windows on Windows
-      });
-
-      // Setup timeout
-      const timeoutHandle = setTimeout(() => {
-        if (this.processPool.has(options.executionId)) {
-          child.kill('SIGTERM');
-          // Give it a moment to terminate gracefully
-          setTimeout(() => {
-            if (!child.killed) {
-              child.kill('SIGKILL');
-            }
-          }, 5000);
-        }
-      }, options.timeoutMs);
-
-      // Track in process pool
-      const poolEntry: PoolEntry = {
-        process: child,
-        executionId: options.executionId,
-        workerType: options.workerType,
-        startTime: new Date(),
-        timeout: timeoutHandle,
-      };
-      this.processPool.set(options.executionId, poolEntry);
-
-      let stdout = '';
-      let stderr = '';
-      let resolved = false;
-
-      const cleanup = () => {
-        clearTimeout(timeoutHandle);
-        this.processPool.delete(options.executionId);
-      };
-
-      child.stdout?.on('data', (data: Buffer) => {
-        const chunk = data.toString();
-        stdout += chunk;
-        this.emit('output', {
-          executionId: options.executionId,
-          type: 'stdout',
-          data: chunk,
-        });
-      });
-
-      child.stderr?.on('data', (data: Buffer) => {
-        const chunk = data.toString();
-        stderr += chunk;
-        this.emit('output', {
-          executionId: options.executionId,
-          type: 'stderr',
-          data: chunk,
-        });
-      });
-
-      child.on('close', (code: number | null) => {
-        if (resolved) return;
-        resolved = true;
-        cleanup();
-
-        resolve({
-          success: code === 0,
-          output: stdout || stderr,
-          error: code !== 0 ? stderr || `Process exited with code ${code}` : undefined,
-        });
-      });
-
-      child.on('error', (error: Error) => {
-        if (resolved) return;
-        resolved = true;
-        cleanup();
-
-        resolve({
+    } catch (error) {
+      if (options.abortController.signal.aborted) {
+        return {
           success: false,
           output: '',
-          error: error.message,
-        });
-      });
-
-      // Handle timeout
-      setTimeout(() => {
-        if (resolved) return;
-        if (!this.processPool.has(options.executionId)) return;
-
-        resolved = true;
-        child.kill('SIGTERM');
-        cleanup();
-
-        resolve({
-          success: false,
-          output: stdout || stderr,
           error: `Execution timed out after ${options.timeoutMs}ms`,
-        });
-      }, options.timeoutMs + 100); // Slightly after the kill timeout
-    });
+        };
+      }
+      return {
+        success: false,
+        output: '',
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
   }
 
   /**
@@ -1310,7 +1298,7 @@ Analyze the above codebase context and provide your response following the forma
       output: '',
       durationMs: 0,
       model: 'unknown',
-      sandboxMode: 'strict',
+      provider: this.llmProvider?.name || 'unknown',
       workerType,
       timestamp: new Date(),
       executionId: `error_${Date.now()}`,

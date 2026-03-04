@@ -11,7 +11,7 @@
 
 | Phase | Description | Tasks | Status |
 |-------|-------------|-------|--------|
-| **Phase 1** | Foundation (Core Infrastructure) | 5 | In Progress (1/5) |
+| **Phase 1** | Foundation (Core Infrastructure) | 5 | In Progress (2/5) |
 | **Phase 2** | Agent Conversion (All 60+ Agents) | 4 | In Progress (1/4) |
 | **Phase 3** | Configuration Generation | 5 | Not Started |
 | **Phase 4** | MCP Tool Curation | 3 | Not Started |
@@ -48,7 +48,7 @@ Replace platform coupling in the CLI service layer. This is the structural work 
 
 ### Task 1.2 — Rewrite headless worker executor
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[x]` Complete
 - **Priority:** P0 — Core coupling point
 - **Depends on:** Nothing
 - **Scope:** Replace `spawn('claude', ['--print', ...])` with provider-agnostic LLM API calls
@@ -62,20 +62,23 @@ Replace platform coupling in the CLI service layer. This is the structural work 
 - Provider is configurable (not hardcoded to Anthropic)
 
 **Acceptance Criteria:**
-- [ ] No `spawn('claude', ...)` calls remain in worker executor
-- [ ] Workers function with `@claude-flow/providers` LLMProvider interface
-- [ ] Provider/model configurable per-worker and globally
+- [x] No `spawn('claude', ...)` calls remain in worker executor
+- [x] Workers function with `@claude-flow/providers` LLMProvider interface
+- [x] Provider/model configurable per-worker and globally
 - [ ] Analysis workers return results to AgentDB memory
 - [ ] Mutation workers route changes through MCP file tools
 
 **Files:**
 - `v3/@claude-flow/cli/src/services/headless-worker-executor.ts` (rewrite)
+- `v3/@claude-flow/cli/src/services/container-worker-pool.ts` (updated)
+- `v3/@claude-flow/cli/src/services/index.ts` (updated)
+- `v3/@claude-flow/providers/package.json` (fixed exports typo)
 
 ---
 
 ### Task 1.3 — Rewrite container worker pool
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[~]` In Progress (mostly done via Task 1.2)
 - **Priority:** P1
 - **Depends on:** Task 1.2
 - **Scope:** Update Docker container env var mapping for provider-agnostic execution
@@ -85,12 +88,22 @@ Replace platform coupling in the CLI service layer. This is the structural work 
 - Support configurable provider selection in container environments
 
 **Acceptance Criteria:**
-- [ ] No Claude Code env vars in container pool configuration
-- [ ] Container workers use provider-agnostic env vars
-- [ ] Existing container orchestration logic preserved
+- [x] No Claude Code env vars in container pool configuration (except `CLAUDE_CODE_HEADLESS` — deferred to Task 1.4)
+- [x] Container workers use provider-agnostic env vars (`CLAUDE_FLOW_PROVIDER`)
+- [x] Existing container orchestration logic preserved
+- [x] `SandboxMode` type removed, replaced with `defaultProvider: string`
+- [x] Result objects use `provider: 'container'` instead of `sandboxMode`
+- [ ] Remove `CLAUDE_CODE_HEADLESS` env var (blocked on Task 1.4 headless runtime rewrite)
+
+**Progress Notes:**
+- `SandboxMode` import removed, `ContainerPoolConfig.defaultSandbox` → `defaultProvider`
+- `DEFAULT_CONFIG.defaultSandbox: 'strict'` → `defaultProvider: 'anthropic'`
+- `CLAUDE_CODE_SANDBOX_MODE` env var → `CLAUDE_FLOW_PROVIDER`
+- `ContainerExecutionOptions.sandbox` → `provider` field
+- All result objects: `sandboxMode` → `provider: 'container'`
 
 **Files:**
-- `v3/@claude-flow/cli/src/services/container-worker-pool.ts` (rewrite)
+- `v3/@claude-flow/cli/src/services/container-worker-pool.ts` (updated — mostly complete)
 
 ---
 
