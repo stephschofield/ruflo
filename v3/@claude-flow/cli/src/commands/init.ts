@@ -15,6 +15,7 @@ import {
   DEFAULT_INIT_OPTIONS,
   MINIMAL_INIT_OPTIONS,
   FULL_INIT_OPTIONS,
+  CLAUDE_CODE_INIT_OPTIONS,
   type InitOptions,
 } from '../init/index.js';
 
@@ -162,11 +163,13 @@ async function initCodexAction(
 }
 
 // Check if project is already initialized
-function isInitialized(cwd: string): { claude: boolean; claudeFlow: boolean } {
+function isInitialized(cwd: string): { claude: boolean; copilot: boolean; claudeFlow: boolean } {
   const claudePath = path.join(cwd, '.claude', 'settings.json');
+  const copilotPath = path.join(cwd, '.github', 'copilot-instructions.md');
   const claudeFlowPath = path.join(cwd, '.claude-flow', 'config.yaml');
   return {
     claude: fs.existsSync(claudePath),
+    copilot: fs.existsSync(copilotPath),
     claudeFlow: fs.existsSync(claudeFlowPath),
   };
 }
@@ -180,6 +183,7 @@ const initAction = async (ctx: CommandContext): Promise<CommandResult> => {
   const onlyClaude = ctx.flags['only-claude'] as boolean;
   const codexMode = ctx.flags.codex as boolean;
   const dualMode = ctx.flags.dual as boolean;
+  const claudeCodeMode = ctx.flags['claude-code'] as boolean;
   const cwd = ctx.cwd;
 
   // If codex mode, use the Codex initializer
@@ -189,10 +193,11 @@ const initAction = async (ctx: CommandContext): Promise<CommandResult> => {
 
   // Check if already initialized
   const initialized = isInitialized(cwd);
-  const hasExisting = initialized.claude || initialized.claudeFlow;
+  const hasExisting = initialized.claude || initialized.copilot || initialized.claudeFlow;
 
   if (hasExisting && !force) {
-    output.printWarning('Claude Flow appears to be already initialized');
+    output.printWarning('Ruflo appears to be already initialized');
+    if (initialized.copilot) output.printInfo('  Found: .github/copilot-instructions.md');
     if (initialized.claude) output.printInfo('  Found: .claude/settings.json');
     if (initialized.claudeFlow) output.printInfo('  Found: .claude-flow/config.yaml');
     output.printInfo('Use --force to reinitialize');
@@ -212,7 +217,7 @@ const initAction = async (ctx: CommandContext): Promise<CommandResult> => {
   }
 
   output.writeln();
-  output.writeln(output.bold('Initializing Claude Flow V3'));
+  output.writeln(output.bold(claudeCodeMode ? 'Initializing Ruflo (Claude Code mode)' : 'Initializing Ruflo'));
   output.writeln();
 
   // Build init options based on flags
@@ -224,6 +229,11 @@ const initAction = async (ctx: CommandContext): Promise<CommandResult> => {
     options = { ...FULL_INIT_OPTIONS, targetDir: cwd, force };
   } else {
     options = { ...DEFAULT_INIT_OPTIONS, targetDir: cwd, force };
+  }
+
+  // Apply --claude-code flag: override platform and components
+  if (claudeCodeMode) {
+    options = { ...options, ...CLAUDE_CODE_INIT_OPTIONS, targetDir: cwd, force };
   }
 
   // Handle --skip-claude and --only-claude flags
@@ -258,7 +268,7 @@ const initAction = async (ctx: CommandContext): Promise<CommandResult> => {
       return { success: false, exitCode: 1 };
     }
 
-    spinner.succeed('Claude Flow V3 initialized successfully!');
+    spinner.succeed('Ruflo initialized successfully!');
     output.writeln();
 
     // Display summary
@@ -279,8 +289,23 @@ const initAction = async (ctx: CommandContext): Promise<CommandResult> => {
     output.printBox(summary.join('\n'), 'Summary');
     output.writeln();
 
+    const isCopilot = (options.platform ?? 'copilot') === 'copilot';
+
     // Show what was created
-    if (options.components.claudeMd || options.components.settings || options.components.skills || options.components.commands || options.components.agents) {
+    if (isCopilot) {
+      const lines = [
+        options.components.copilotInstructions ? `Instructions:  .github/copilot-instructions.md` : '',
+        options.components.skills ? `Skills:        .github/skills/ (${result.summary.skillsCount} skills)` : '',
+        options.components.prompts ? `Prompts:       .github/prompts/` : '',
+        options.components.agents ? `Agents:        .github/agents/ (${result.summary.agentsCount} agents)` : '',
+        options.components.hooks ? `Hooks:         .github/hooks/hooks.json` : '',
+        options.components.mcp ? `MCP:           .vscode/mcp.json` : '',
+      ].filter(Boolean);
+      if (lines.length > 0) {
+        output.printBox(lines.join('\n'), 'Copilot Integration');
+        output.writeln();
+      }
+    } else if (options.components.claudeMd || options.components.settings || options.components.skills || options.components.commands || options.components.agents) {
       output.printBox(
         [
           options.components.claudeMd ? `CLAUDE.md:   Swarm guidance & configuration` : '',
@@ -403,11 +428,12 @@ const initAction = async (ctx: CommandContext): Promise<CommandResult> => {
       // Next steps (only if not auto-starting)
       output.writeln(output.bold('Next steps:'));
       output.printList([
-        `Run ${output.highlight('claude-flow daemon start')} to start background workers`,
-        `Run ${output.highlight('claude-flow memory init')} to initialize memory database`,
-        `Run ${output.highlight('claude-flow swarm init')} to initialize a swarm`,
-        `Or use ${output.highlight('claude-flow init --start-all')} to do all of the above`,
-        options.components.settings ? `Review ${output.highlight('.claude/settings.json')} for hook configurations` : '',
+        `Run ${output.highlight('ruflo daemon start')} to start background workers`,
+        `Run ${output.highlight('ruflo memory init')} to initialize memory database`,
+        `Run ${output.highlight('ruflo swarm init')} to initialize a swarm`,
+        `Or use ${output.highlight('ruflo init --start-all')} to do all of the above`,
+        isCopilot ? `Review ${output.highlight('.github/copilot-instructions.md')} for project configuration` : '',
+        !isCopilot && options.components.settings ? `Review ${output.highlight('.claude/settings.json')} for hook configurations` : '',
       ].filter(Boolean));
     }
 
@@ -744,6 +770,9 @@ const skillsCommand: Command = {
         mcp: false,
         runtime: false,
         claudeMd: false,
+        copilotInstructions: false,
+        prompts: false,
+        hooks: false,
       },
       skills: {
         all: ctx.flags.all as boolean,
@@ -800,6 +829,9 @@ const hooksCommand: Command = {
         mcp: false,
         runtime: false,
         claudeMd: false,
+        copilotInstructions: false,
+        prompts: false,
+        hooks: false,
       },
       hooks: minimal
         ? {
@@ -1059,6 +1091,12 @@ export const initCommand: Command = {
       choices: ['all-MiniLM-L6-v2', 'all-mpnet-base-v2'],
     },
     {
+      name: 'claude-code',
+      description: 'Generate Claude Code output (.claude/, .mcp.json, CLAUDE.md) instead of Copilot',
+      type: 'boolean',
+      default: false,
+    },
+    {
       name: 'codex',
       description: 'Initialize for OpenAI Codex CLI (creates AGENTS.md, .agents/)',
       type: 'boolean',
@@ -1072,25 +1110,20 @@ export const initCommand: Command = {
     },
   ],
   examples: [
-    { command: 'claude-flow init', description: 'Initialize with default configuration' },
-    { command: 'claude-flow init --start-all', description: 'Initialize and start daemon, memory, swarm' },
-    { command: 'claude-flow init --start-daemon', description: 'Initialize and start daemon only' },
-    { command: 'claude-flow init --minimal', description: 'Initialize with minimal configuration' },
-    { command: 'claude-flow init --full', description: 'Initialize with all components' },
-    { command: 'claude-flow init --force', description: 'Reinitialize and overwrite existing config' },
-    { command: 'claude-flow init --only-claude', description: 'Only create Claude Code integration' },
-    { command: 'claude-flow init --skip-claude', description: 'Only create V3 runtime' },
-    { command: 'claude-flow init wizard', description: 'Interactive setup wizard' },
-    { command: 'claude-flow init --with-embeddings', description: 'Initialize with ONNX embeddings' },
-    { command: 'claude-flow init --with-embeddings --embedding-model all-mpnet-base-v2', description: 'Use larger embedding model' },
-    { command: 'claude-flow init skills --all', description: 'Install all available skills' },
-    { command: 'claude-flow init hooks --minimal', description: 'Create minimal hooks configuration' },
-    { command: 'claude-flow init upgrade', description: 'Update helpers while preserving data' },
-    { command: 'claude-flow init upgrade --settings', description: 'Update helpers and merge new settings (Agent Teams)' },
-    { command: 'claude-flow init upgrade --verbose', description: 'Show detailed upgrade info' },
-    { command: 'claude-flow init --codex', description: 'Initialize for OpenAI Codex (AGENTS.md)' },
-    { command: 'claude-flow init --codex --full', description: 'Codex init with all 137+ skills' },
-    { command: 'claude-flow init --dual', description: 'Initialize for both Claude Code and Codex' },
+    { command: 'ruflo init', description: 'Initialize with Copilot-native output (default)' },
+    { command: 'ruflo init --claude-code', description: 'Initialize with Claude Code output' },
+    { command: 'ruflo init --start-all', description: 'Initialize and start daemon, memory, swarm' },
+    { command: 'ruflo init --minimal', description: 'Initialize with minimal configuration' },
+    { command: 'ruflo init --full', description: 'Initialize with all components' },
+    { command: 'ruflo init --force', description: 'Reinitialize and overwrite existing config' },
+    { command: 'ruflo init wizard', description: 'Interactive setup wizard' },
+    { command: 'ruflo init --with-embeddings', description: 'Initialize with ONNX embeddings' },
+    { command: 'ruflo init skills --all', description: 'Install all available skills' },
+    { command: 'ruflo init hooks --minimal', description: 'Create minimal hooks configuration' },
+    { command: 'ruflo init upgrade', description: 'Update helpers while preserving data' },
+    { command: 'ruflo init upgrade --settings', description: 'Update helpers and merge new settings' },
+    { command: 'ruflo init --codex', description: 'Initialize for OpenAI Codex (AGENTS.md)' },
+    { command: 'ruflo init --dual', description: 'Initialize for both Claude Code and Codex' },
   ],
   action: initAction,
 };

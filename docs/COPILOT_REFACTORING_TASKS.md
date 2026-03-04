@@ -13,7 +13,7 @@
 |-------|-------------|-------|--------|
 | **Phase 1** | Foundation (Core Infrastructure) | 5 | In Progress (4/5) |
 | **Phase 2** | Agent Conversion (All 60+ Agents) | 4 | Complete (4/4) |
-| **Phase 3** | Configuration Generation | 5 | Not Started |
+| **Phase 3** | Configuration Generation | 5 | In Progress (4/5) |
 | **Phase 4** | MCP Tool Curation | 3 | Not Started |
 | **Phase 5** | Integration & Cleanup | 5 | Not Started |
 
@@ -325,7 +325,7 @@ Rewrite the `init` command and config generators to output Copilot-native config
 
 ### Task 3.1 — Rewrite init command and executor
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[x]` **Complete** (2026-03-04)
 - **Priority:** P0
 - **Depends on:** Phase 1 (foundation must be in place)
 - **Scope:** `npx ruflo init` generates Copilot-native output
@@ -339,14 +339,25 @@ Rewrite the `init` command and config generators to output Copilot-native config
 - `.github/skills/*/SKILL.md` — skills (already compatible format)
 
 **Acceptance Criteria:**
-- [ ] `npx ruflo init` generates Copilot-native config by default
-- [ ] All 6 output types created correctly
-- [ ] No `.claude/settings.json` generated (Copilot mode)
-- [ ] Backward-compat flag for Claude Code output (optional)
+- [x] `npx ruflo init` generates Copilot-native config by default
+- [x] All 6 output types created correctly
+- [x] No `.claude/settings.json` generated (Copilot mode)
+- [x] Backward-compat flag for Claude Code output (`--claude-code`)
+
+**Completion Notes:**
+- Added `InitPlatform = 'copilot' | 'claude-code'` type, default platform is `'copilot'`
+- `DIRECTORIES` constant split into `copilot` and `claude` path sets
+- `executeInit()` routes all operations by platform: `createDirectories`, `writeMCPConfig`, `copySkills`, `copyAgents`, `copyPrompts`, `writeCopilotInstructions`, `writeHooksConfig`
+- Added `--claude-code` CLI flag for backward-compat (applies `CLAUDE_CODE_INIT_OPTIONS`)
+- Display strings updated: "Ruflo" branding, platform-aware summary boxes
+- Zero new compilation errors introduced
 
 **Files:**
-- `v3/@claude-flow/cli/src/commands/init.ts` (rewrite)
-- `v3/@claude-flow/cli/src/init/executor.ts` (rewrite — 44 Claude Code refs)
+- `v3/@claude-flow/cli/src/init/types.ts` (added `InitPlatform`, `platform` field, `CLAUDE_CODE_INIT_OPTIONS`)
+- `v3/@claude-flow/cli/src/init/executor.ts` (platform routing + 4 new Copilot write functions)
+- `v3/@claude-flow/cli/src/init/mcp-generator.ts` (added `generateCopilotMCPConfig/Json`)
+- `v3/@claude-flow/cli/src/commands/init.ts` (added `--claude-code` flag, platform-aware display)
+- `v3/@claude-flow/cli/src/init/index.ts` (updated exports)
 
 ---
 
@@ -357,9 +368,13 @@ Rewrite the `init` command and config generators to output Copilot-native config
 - **Depends on:** Task 3.1
 - **Scope:** Output `.vscode/settings.json` and `.github/copilot-instructions.md` instead of `.claude/settings.json`
 
+**Details:**
+- `.github/copilot-instructions.md` generation is already handled by Task 3.1 (`writeCopilotInstructions()` in executor.ts)
+- Remaining: `.vscode/settings.json` generator and cleanup of 17 Claude Code refs in `settings-generator.ts`
+
 **Acceptance Criteria:**
+- [x] Generates `.github/copilot-instructions.md` with behavioral rules (done in Task 3.1)
 - [ ] Generates `.vscode/settings.json` with Copilot-relevant settings
-- [ ] Generates `.github/copilot-instructions.md` with behavioral rules
 - [ ] No `.claude/settings.json` references (17 to remove)
 
 **Files:**
@@ -369,7 +384,7 @@ Rewrite the `init` command and config generators to output Copilot-native config
 
 ### Task 3.3 — Rewrite MCP config generator
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[x]` **Complete** (2026-03-04)
 - **Priority:** P1
 - **Depends on:** Task 3.1
 - **Scope:** Output `.vscode/mcp.json` instead of `.mcp.json` for Claude Code
@@ -379,27 +394,33 @@ Rewrite the `init` command and config generators to output Copilot-native config
 {
   "servers": {
     "ruflo": {
+      "type": "stdio",
       "command": "npx",
-      "args": ["ruflo", "mcp", "start"],
-      "env": {}
+      "args": ["ruflo", "mcp", "start"]
     }
   }
 }
 ```
 
 **Acceptance Criteria:**
-- [ ] Generates `.vscode/mcp.json` in Copilot format
-- [ ] MCP server configuration correct for Ruflo
-- [ ] No `.mcp.json` (Claude Code format) generated
+- [x] Generates `.vscode/mcp.json` in Copilot format
+- [x] MCP server configuration correct for Ruflo
+- [x] No `.mcp.json` (Claude Code format) generated in Copilot mode
+
+**Completion Notes:**
+- Added `generateCopilotMCPConfig()` and `generateCopilotMCPJson()` in mcp-generator.ts
+- Copilot format uses `servers` key (not `mcpServers`), includes `type: 'stdio'`
+- `writeMCPConfig()` in executor.ts routes to `.vscode/mcp.json` (Copilot) or `.mcp.json` (Claude Code)
+- Original `generateMCPConfig`/`generateMCPJson` preserved for Claude Code backward-compat
 
 **Files:**
-- `v3/@claude-flow/cli/src/init/mcp-generator.ts` (rewrite)
+- `v3/@claude-flow/cli/src/init/mcp-generator.ts` (added Copilot generators)
 
 ---
 
 ### Task 3.4 — Convert prompt files (slash commands)
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[x]` **Complete** (2026-03-04)
 - **Priority:** P2
 - **Depends on:** Task 3.1
 - **Scope:** Convert `.claude/commands/*.md` → `.github/prompts/*.prompt.md`
@@ -410,19 +431,24 @@ Rewrite the `init` command and config generators to output Copilot-native config
 - Preserve command functionality and descriptions
 
 **Acceptance Criteria:**
-- [ ] All Claude Code commands converted to Copilot prompt files
-- [ ] Prompt files use correct Copilot frontmatter format
-- [ ] Slash commands functional in Copilot chat
+- [x] All Claude Code commands converted to Copilot prompt files
+- [x] Prompt files use correct Copilot frontmatter format
+- [x] Slash commands functional in Copilot chat
+
+**Completion Notes:**
+- `copyPrompts()` function added to executor.ts
+- Sources from `plugin/commands/` or `.claude/commands/`, converts `.md` → `.prompt.md`
+- Existing `.github/prompts/` files from Phase 2 preserved (skip if exist, unless `--force`)
+- Copilot mode routes `copyCommands()` → `copyPrompts()` automatically
 
 **Files:**
-- `.claude/commands/*.md` (source)
-- `.github/prompts/*.prompt.md` (target)
+- `v3/@claude-flow/cli/src/init/executor.ts` (added `copyPrompts()` function)
 
 ---
 
 ### Task 3.5 — Rewrite copilot-instructions.md generator
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[x]` **Complete** (2026-03-04)
 - **Priority:** P1
 - **Depends on:** Task 3.1
 - **Scope:** Extract content from `CLAUDE.md` into `.github/copilot-instructions.md`
@@ -436,13 +462,18 @@ Rewrite the `init` command and config generators to output Copilot-native config
 - File organization rules
 
 **Acceptance Criteria:**
-- [ ] `.github/copilot-instructions.md` contains all essential project rules
-- [ ] Content de-coupled from Claude Code terminology
-- [ ] References use Copilot-native patterns (MCP tools, subagents, handoffs)
+- [x] `.github/copilot-instructions.md` contains all essential project rules
+- [x] Content de-coupled from Claude Code terminology
+- [x] References use Copilot-native patterns (MCP tools, subagents, handoffs)
+
+**Completion Notes:**
+- `writeCopilotInstructions()` and `generateCopilotInstructionsContent()` added to executor.ts
+- Generates: project description, MCP tool categories, coding standards, file organization, swarm config (from `InitOptions.runtime`), agent routing table, behavioral rules
+- All content uses "Ruflo" branding, no Claude Code terminology
+- Respects `--force` flag (skip if file exists)
 
 **Files:**
-- `CLAUDE.md` (source reference)
-- `.github/copilot-instructions.md` (target — generated)
+- `v3/@claude-flow/cli/src/init/executor.ts` (added generator functions)
 
 ---
 

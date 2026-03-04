@@ -15,7 +15,7 @@ const __dirname = dirname(__filename);
 import type { InitOptions, InitResult, PlatformInfo } from './types.js';
 import { detectPlatform, DEFAULT_INIT_OPTIONS } from './types.js';
 import { generateSettingsJson, generateSettings } from './settings-generator.js';
-import { generateMCPJson } from './mcp-generator.js';
+import { generateMCPJson, generateCopilotMCPJson } from './mcp-generator.js';
 import { generateStatuslineScript, generateStatuslineHook } from './statusline-generator.js';
 import {
   generatePreCommitHook,
@@ -136,6 +136,14 @@ const DIRECTORIES = {
     '.claude/agents',
     '.claude/helpers',
   ],
+  copilot: [
+    '.github',
+    '.github/agents',
+    '.github/skills',
+    '.github/prompts',
+    '.github/hooks',
+    '.vscode',
+  ],
   runtime: [
     '.claude-flow',
     '.claude-flow/data',
@@ -172,17 +180,18 @@ export async function executeInit(options: InitOptions): Promise<InitResult> {
   };
 
   const targetDir = options.targetDir;
+  const isCopilot = (options.platform ?? 'copilot') === 'copilot';
 
   try {
     // Create directory structure
     await createDirectories(targetDir, options, result);
 
-    // Generate and write settings.json
-    if (options.components.settings) {
+    // Generate and write settings.json (Claude Code only)
+    if (options.components.settings && !isCopilot) {
       await writeSettings(targetDir, options, result);
     }
 
-    // Generate and write .mcp.json
+    // Generate and write MCP config
     if (options.components.mcp) {
       await writeMCPConfig(targetDir, options, result);
     }
@@ -192,9 +201,14 @@ export async function executeInit(options: InitOptions): Promise<InitResult> {
       await copySkills(targetDir, options, result);
     }
 
-    // Copy commands
-    if (options.components.commands) {
+    // Copy commands (Claude Code only)
+    if (options.components.commands && !isCopilot) {
       await copyCommands(targetDir, options, result);
+    }
+
+    // Copy/generate prompts (Copilot only)
+    if (options.components.prompts && isCopilot) {
+      await copyPrompts(targetDir, options, result);
     }
 
     // Copy agents
@@ -202,13 +216,13 @@ export async function executeInit(options: InitOptions): Promise<InitResult> {
       await copyAgents(targetDir, options, result);
     }
 
-    // Generate helpers
-    if (options.components.helpers) {
+    // Generate helpers (Claude Code only)
+    if (options.components.helpers && !isCopilot) {
       await writeHelpers(targetDir, options, result);
     }
 
-    // Generate statusline
-    if (options.components.statusline) {
+    // Generate statusline (Claude Code only)
+    if (options.components.statusline && !isCopilot) {
       await writeStatusline(targetDir, options, result);
     }
 
@@ -217,14 +231,24 @@ export async function executeInit(options: InitOptions): Promise<InitResult> {
       await writeRuntimeConfig(targetDir, options, result);
     }
 
-    // Create initial metrics for statusline (prevents "all zeros" display)
-    if (options.components.statusline) {
+    // Create initial metrics for statusline (Claude Code only)
+    if (options.components.statusline && !isCopilot) {
       await writeInitialMetrics(targetDir, options, result);
     }
 
-    // Generate CLAUDE.md
-    if (options.components.claudeMd) {
+    // Generate CLAUDE.md (Claude Code only)
+    if (options.components.claudeMd && !isCopilot) {
       await writeClaudeMd(targetDir, options, result);
+    }
+
+    // Generate .github/copilot-instructions.md (Copilot only)
+    if (options.components.copilotInstructions && isCopilot) {
+      await writeCopilotInstructions(targetDir, options, result);
+    }
+
+    // Generate .github/hooks/ config (Copilot only)
+    if (options.components.hooks && isCopilot) {
+      await writeHooksConfig(targetDir, options, result);
     }
 
     // Count enabled hooks
@@ -700,8 +724,10 @@ async function createDirectories(
   options: InitOptions,
   result: InitResult
 ): Promise<void> {
+  const isCopilot = (options.platform ?? 'copilot') === 'copilot';
+  const platformDirs = isCopilot ? DIRECTORIES.copilot : DIRECTORIES.claude;
   const dirs = [
-    ...DIRECTORIES.claude,
+    ...platformDirs,
     ...(options.components.runtime ? DIRECTORIES.runtime : []),
   ];
 
@@ -735,23 +761,37 @@ async function writeSettings(
 }
 
 /**
- * Write .mcp.json
+ * Write MCP config (.vscode/mcp.json for Copilot, .mcp.json for Claude Code)
  */
 async function writeMCPConfig(
   targetDir: string,
   options: InitOptions,
   result: InitResult
 ): Promise<void> {
-  const mcpPath = path.join(targetDir, '.mcp.json');
+  const isCopilot = (options.platform ?? 'copilot') === 'copilot';
+  const mcpPath = isCopilot
+    ? path.join(targetDir, '.vscode', 'mcp.json')
+    : path.join(targetDir, '.mcp.json');
+  const displayPath = isCopilot ? '.vscode/mcp.json' : '.mcp.json';
 
   if (fs.existsSync(mcpPath) && !options.force) {
-    result.skipped.push('.mcp.json');
+    result.skipped.push(displayPath);
     return;
   }
 
-  const content = generateMCPJson(options);
+  // Ensure .vscode/ directory exists for Copilot
+  if (isCopilot) {
+    const vscodePath = path.join(targetDir, '.vscode');
+    if (!fs.existsSync(vscodePath)) {
+      fs.mkdirSync(vscodePath, { recursive: true });
+    }
+  }
+
+  const content = isCopilot
+    ? generateCopilotMCPJson(options)
+    : generateMCPJson(options);
   fs.writeFileSync(mcpPath, content, 'utf-8');
-  result.created.files.push('.mcp.json');
+  result.created.files.push(displayPath);
 }
 
 /**
@@ -763,7 +803,9 @@ async function copySkills(
   result: InitResult
 ): Promise<void> {
   const skillsConfig = options.skills;
-  const targetSkillsDir = path.join(targetDir, '.claude', 'skills');
+  const isCopilot = (options.platform ?? 'copilot') === 'copilot';
+  const skillsRelDir = isCopilot ? '.github/skills' : '.claude/skills';
+  const targetSkillsDir = path.join(targetDir, skillsRelDir);
 
   // Determine which skills to copy
   const skillsToCopy: string[] = [];
@@ -796,10 +838,10 @@ async function copySkills(
     if (fs.existsSync(sourcePath)) {
       if (!fs.existsSync(targetPath) || options.force) {
         copyDirRecursive(sourcePath, targetPath);
-        result.created.files.push(`.claude/skills/${skillName}`);
+        result.created.files.push(`${skillsRelDir}/${skillName}`);
         result.summary.skillsCount++;
       } else {
-        result.skipped.push(`.claude/skills/${skillName}`);
+        result.skipped.push(`${skillsRelDir}/${skillName}`);
       }
     }
   }
@@ -869,7 +911,9 @@ async function copyAgents(
   result: InitResult
 ): Promise<void> {
   const agentsConfig = options.agents;
-  const targetAgentsDir = path.join(targetDir, '.claude', 'agents');
+  const isCopilot = (options.platform ?? 'copilot') === 'copilot';
+  const agentsRelDir = isCopilot ? '.github/agents' : '.claude/agents';
+  const targetAgentsDir = path.join(targetDir, agentsRelDir);
 
   // Determine which agents to copy
   const agentsToCopy: string[] = [];
@@ -911,9 +955,9 @@ async function copyAgents(
         const yamlFiles = countFiles(sourcePath, '.yaml');
         const mdFiles = countFiles(sourcePath, '.md');
         result.summary.agentsCount += yamlFiles + mdFiles;
-        result.created.files.push(`.claude/agents/${agentCategory}`);
+        result.created.files.push(`${agentsRelDir}/${agentCategory}`);
       } else {
-        result.skipped.push(`.claude/agents/${agentCategory}`);
+        result.skipped.push(`${agentsRelDir}/${agentCategory}`);
       }
     }
   }
@@ -1915,6 +1959,223 @@ function countEnabledHooks(options: InitOptions): number {
   if (hooks.notification) count++;
 
   return count;
+}
+
+/**
+ * Write .github/copilot-instructions.md
+ * Generates project guidance for Copilot from runtime options
+ */
+async function writeCopilotInstructions(
+  targetDir: string,
+  options: InitOptions,
+  result: InitResult
+): Promise<void> {
+  const filePath = path.join(targetDir, '.github', 'copilot-instructions.md');
+
+  if (fs.existsSync(filePath) && !options.force) {
+    result.skipped.push('.github/copilot-instructions.md');
+    return;
+  }
+
+  const content = generateCopilotInstructionsContent(options);
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, content, 'utf-8');
+  result.created.files.push('.github/copilot-instructions.md');
+}
+
+/**
+ * Generate copilot-instructions.md content
+ */
+function generateCopilotInstructionsContent(options: InitOptions): string {
+  const lines: string[] = [
+    '# Project Instructions',
+    '',
+    'This project uses **Ruflo** (v3.5) — a multi-agent orchestration framework.',
+    'It provides 215+ MCP tools for swarm coordination, memory management, agent spawning, task orchestration, and more via the `ruflo` MCP server.',
+    '',
+    '## MCP Server',
+    '',
+    'The `ruflo` MCP server exposes tools over stdio (JSON-RPC 2.0). Key tool categories:',
+    '- **agent**: `agent_spawn`, `agent_terminate`, `agent_status`, `agent_list`, `agent_pool`, `agent_health`, `agent_update`',
+    '- **swarm**: `swarm_init`, `swarm_status`, `swarm_shutdown`, `swarm_health`',
+    '- **memory**: `memory_store`, `memory_retrieve`, `memory_search`, `memory_delete`, `memory_list`, `memory_stats`',
+    '- **task**: `task_create`, `task_status`, `task_list`, `task_complete`, `task_update`, `task_cancel`',
+    '- **workflow**: `workflow_create`, `workflow_execute`, `workflow_status`, `workflow_list`',
+    '',
+    '## Coding Standards',
+    '',
+    '- Follow Domain-Driven Design with bounded contexts',
+    '- Keep files under 500 lines',
+    '- Use typed interfaces for all public APIs',
+    '- Prefer TDD London School (mock-first) for new code',
+    '- Validate input at system boundaries',
+    '',
+    '## File Organization',
+    '',
+    '- `/src` for source code',
+    '- `/tests` for test files',
+    '- `/docs` for documentation',
+    '- `/config` for configuration',
+    '- `/scripts` for utility scripts',
+    '- Never save working files to the root folder',
+    '',
+    '## Swarm Configuration',
+    '',
+    `- **Topology**: ${options.runtime.topology}`,
+    `- **Max Agents**: ${options.runtime.maxAgents}`,
+    `- **Memory Backend**: ${options.runtime.memoryBackend}`,
+    `- **HNSW Indexing**: ${options.runtime.enableHNSW ? 'Enabled' : 'Disabled'}`,
+    `- **Neural Learning**: ${options.runtime.enableNeural ? 'Enabled' : 'Disabled'}`,
+    '',
+    '## Agent Routing',
+    '',
+    '| Task | Agents |',
+    '|------|--------|',
+    '| Bug Fix | researcher, coder, tester |',
+    '| Feature | architect, coder, tester, reviewer |',
+    '| Refactor | architect, coder, reviewer |',
+    '| Performance | performance engineer, coder |',
+    '| Security | security-auditor, coder |',
+    '',
+    '## Behavioral Rules',
+    '',
+    '- Do what is asked; nothing more, nothing less',
+    '- NEVER create files unless absolutely necessary',
+    '- ALWAYS prefer editing an existing file to creating a new one',
+    '- NEVER proactively create documentation files unless explicitly requested',
+    '- NEVER save working files to the root folder',
+    '- ALWAYS read a file before editing it',
+    '- NEVER commit secrets, credentials, or .env files',
+    '',
+  ];
+
+  return lines.join('\n');
+}
+
+/**
+ * Write .github/hooks/*.json hook config (Copilot)
+ */
+async function writeHooksConfig(
+  targetDir: string,
+  options: InitOptions,
+  result: InitResult
+): Promise<void> {
+  const hooksDir = path.join(targetDir, '.github', 'hooks');
+  const hooksJsonPath = path.join(hooksDir, 'hooks.json');
+
+  if (fs.existsSync(hooksJsonPath) && !options.force) {
+    result.skipped.push('.github/hooks/hooks.json');
+    return;
+  }
+
+  fs.mkdirSync(hooksDir, { recursive: true });
+
+  // Generate hooks.json with the 8 Copilot hook events
+  const hooksConfig = {
+    hooks: [
+      {
+        event: 'SessionStart',
+        command: 'npx ruflo hooks session-start',
+        timeout: 15000,
+        enabled: options.hooks.sessionStart,
+      },
+      {
+        event: 'UserPromptSubmit',
+        command: 'npx ruflo hooks route',
+        timeout: 10000,
+        enabled: options.hooks.userPromptSubmit,
+      },
+      {
+        event: 'PreToolUse',
+        matcher: 'Bash',
+        command: 'npx ruflo hooks pre-bash',
+        timeout: options.hooks.timeout,
+        enabled: options.hooks.preToolUse,
+      },
+      {
+        event: 'PostToolUse',
+        matcher: 'Write|Edit|MultiEdit',
+        command: 'npx ruflo hooks post-edit',
+        timeout: 10000,
+        enabled: options.hooks.postToolUse,
+      },
+      {
+        event: 'PreCompact',
+        command: 'npx ruflo hooks compact',
+        timeout: 5000,
+        enabled: options.hooks.preCompact,
+      },
+      {
+        event: 'SubagentStart',
+        command: 'npx ruflo hooks subagent-start',
+        timeout: 5000,
+        enabled: true,
+      },
+      {
+        event: 'SubagentStop',
+        command: 'npx ruflo hooks subagent-stop',
+        timeout: 5000,
+        enabled: true,
+      },
+      {
+        event: 'Stop',
+        command: 'npx ruflo hooks session-end',
+        timeout: 10000,
+        enabled: options.hooks.stop,
+      },
+    ],
+  };
+
+  fs.writeFileSync(hooksJsonPath, JSON.stringify(hooksConfig, null, 2), 'utf-8');
+  result.created.files.push('.github/hooks/hooks.json');
+}
+
+/**
+ * Copy prompt files to .github/prompts/ (Copilot)
+ * Sources from plugin/commands/ or .claude/commands/
+ */
+async function copyPrompts(
+  targetDir: string,
+  options: InitOptions,
+  result: InitResult
+): Promise<void> {
+  const targetPromptsDir = path.join(targetDir, '.github', 'prompts');
+  fs.mkdirSync(targetPromptsDir, { recursive: true });
+
+  // Find source commands directory (prompts originate from commands)
+  const sourceCommandsDir = findSourceDir('commands', options.sourceBaseDir);
+
+  // Also check if .github/prompts/ already has files from Phase 2 conversion
+  const existingPrompts = fs.existsSync(targetPromptsDir)
+    ? fs.readdirSync(targetPromptsDir).filter(f => f.endsWith('.prompt.md'))
+    : [];
+
+  if (existingPrompts.length > 0 && !options.force) {
+    for (const p of existingPrompts) {
+      result.skipped.push(`.github/prompts/${p}`);
+    }
+    return;
+  }
+
+  // If source commands exist, convert them to prompt format
+  if (sourceCommandsDir) {
+    const entries = fs.readdirSync(sourceCommandsDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isFile() && entry.name.endsWith('.md')) {
+        const sourcePath = path.join(sourceCommandsDir, entry.name);
+        const promptName = entry.name.replace('.md', '.prompt.md');
+        const targetPath = path.join(targetPromptsDir, promptName);
+
+        if (!fs.existsSync(targetPath) || options.force) {
+          const content = fs.readFileSync(sourcePath, 'utf-8');
+          fs.writeFileSync(targetPath, content, 'utf-8');
+          result.created.files.push(`.github/prompts/${promptName}`);
+        } else {
+          result.skipped.push(`.github/prompts/${promptName}`);
+        }
+      }
+    }
+  }
 }
 
 export default executeInit;
