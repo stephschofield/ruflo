@@ -21,6 +21,7 @@ export {
   DEFAULT_INIT_OPTIONS,
   MINIMAL_INIT_OPTIONS,
   FULL_INIT_OPTIONS,
+  COPILOT_INIT_OPTIONS,
   CLAUDE_CODE_INIT_OPTIONS,
   detectPlatform,
 } from './types.js';

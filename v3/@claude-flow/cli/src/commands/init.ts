@@ -15,8 +15,10 @@ import {
   DEFAULT_INIT_OPTIONS,
   MINIMAL_INIT_OPTIONS,
   FULL_INIT_OPTIONS,
+  COPILOT_INIT_OPTIONS,
   CLAUDE_CODE_INIT_OPTIONS,
   type InitOptions,
+  type InitPlatform,
 } from '../init/index.js';
 
 // Codex initialization action
@@ -184,12 +186,31 @@ const initAction = async (ctx: CommandContext): Promise<CommandResult> => {
   const codexMode = ctx.flags.codex as boolean;
   const dualMode = ctx.flags.dual as boolean;
   const claudeCodeMode = ctx.flags['claude-code'] as boolean;
+  const copilotMode = ctx.flags.copilot as boolean;
   const toolProfile = (ctx.flags['tool-profile'] || ctx.flags.toolProfile || 'default') as string;
   const cwd = ctx.cwd;
 
   // If codex mode, use the Codex initializer
   if (codexMode || dualMode) {
     return initCodexAction(ctx, { codexMode, dualMode, force, minimal, full });
+  }
+
+  // --- Platform selection (required) ---
+  let platformChoice: InitPlatform;
+  if (copilotMode) {
+    platformChoice = 'copilot';
+  } else if (claudeCodeMode) {
+    platformChoice = 'claude-code';
+  } else {
+    // Always prompt the user to select a platform
+    output.writeln();
+    platformChoice = await select<InitPlatform>({
+      message: 'Please select your agentic platform to initialize Ruflo:',
+      options: [
+        { value: 'copilot' as InitPlatform, label: 'GitHub Copilot', hint: '.github/agents/, skills, prompts, hooks' },
+        { value: 'claude-code' as InitPlatform, label: 'Claude Code', hint: '.claude/, CLAUDE.md, .mcp.json' },
+      ],
+    });
   }
 
   // Check if already initialized
@@ -218,7 +239,11 @@ const initAction = async (ctx: CommandContext): Promise<CommandResult> => {
   }
 
   output.writeln();
-  output.writeln(output.bold(claudeCodeMode ? 'Initializing Ruflo (Claude Code mode)' : 'Initializing Ruflo'));
+  output.writeln(output.bold(
+    platformChoice === 'claude-code'
+      ? 'Initializing Ruflo (Claude Code mode)'
+      : 'Initializing Ruflo (GitHub Copilot mode)'
+  ));
   output.writeln();
 
   // Build init options based on flags
@@ -237,9 +262,11 @@ const initAction = async (ctx: CommandContext): Promise<CommandResult> => {
     options.mcp = { ...options.mcp, toolProfile: toolProfile as 'default' | 'full' | 'minimal' };
   }
 
-  // Apply --claude-code flag: override platform and components
-  if (claudeCodeMode) {
+  // Apply platform selection
+  if (platformChoice === 'claude-code') {
     options = { ...options, ...CLAUDE_CODE_INIT_OPTIONS, targetDir: cwd, force };
+  } else {
+    options = { ...options, ...COPILOT_INIT_OPTIONS, targetDir: cwd, force };
   }
 
   // Handle --skip-claude and --only-claude flags
@@ -1097,8 +1124,14 @@ export const initCommand: Command = {
       choices: ['all-MiniLM-L6-v2', 'all-mpnet-base-v2'],
     },
     {
+      name: 'copilot',
+      description: 'Skip platform prompt and initialize for GitHub Copilot (.github/agents/, skills, prompts)',
+      type: 'boolean',
+      default: false,
+    },
+    {
       name: 'claude-code',
-      description: 'Generate Claude Code output (.claude/, .mcp.json, CLAUDE.md) instead of Copilot',
+      description: 'Skip platform prompt and initialize for Claude Code (.claude/, .mcp.json, CLAUDE.md)',
       type: 'boolean',
       default: false,
     },
@@ -1123,8 +1156,9 @@ export const initCommand: Command = {
     },
   ],
   examples: [
-    { command: 'ruflo init', description: 'Initialize with Copilot-native output (default)' },
-    { command: 'ruflo init --claude-code', description: 'Initialize with Claude Code output' },
+    { command: 'ruflo init', description: 'Interactive platform selection (GitHub Copilot or Claude Code)' },
+    { command: 'ruflo init --copilot', description: 'Initialize for GitHub Copilot (skip prompt)' },
+    { command: 'ruflo init --claude-code', description: 'Initialize for Claude Code (skip prompt)' },
     { command: 'ruflo init --start-all', description: 'Initialize and start daemon, memory, swarm' },
     { command: 'ruflo init --minimal', description: 'Initialize with minimal configuration' },
     { command: 'ruflo init --full', description: 'Initialize with all components' },

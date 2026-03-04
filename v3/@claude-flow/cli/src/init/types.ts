@@ -549,8 +549,30 @@ export const FULL_INIT_OPTIONS: InitOptions = {
 };
 
 /**
+ * Copilot explicit init options
+ * Used when `npx ruflo init --copilot` is passed or user selects GitHub Copilot
+ */
+export const COPILOT_INIT_OPTIONS: Partial<InitOptions> = {
+  platform: 'copilot',
+  components: {
+    settings: false,
+    skills: true,
+    commands: false,
+    agents: true,
+    helpers: false,
+    statusline: false,
+    mcp: true,
+    runtime: true,
+    claudeMd: false,
+    copilotInstructions: true,
+    prompts: true,
+    hooks: true,
+  },
+};
+
+/**
  * Claude Code backward-compat init options
- * Used when `npx ruflo init --claude-code` is passed
+ * Used when `npx ruflo init --claude-code` is passed or user selects Claude Code
  */
 export const CLAUDE_CODE_INIT_OPTIONS: Partial<InitOptions> = {
   platform: 'claude-code',
