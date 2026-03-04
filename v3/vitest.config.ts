@@ -111,6 +111,17 @@ export default defineConfig({
       '@memory': path.resolve(__dirname, './modules/memory'),
       '@swarm': path.resolve(__dirname, './modules/swarm'),
       '@core': path.resolve(__dirname, './modules/core'),
+      // @claude-flow/* packages without built dist/ directories.
+      // Alias to stubs so vite can resolve their dynamic imports in tests.
+      '@claude-flow/codex': path.resolve(__dirname, './__tests__/mocks/codex-mock.ts'),
+      '@claude-flow/mcp': path.resolve(__dirname, './__tests__/mocks/mcp-mock.ts'),
+      '@claude-flow/aidefence': path.resolve(__dirname, './__tests__/mocks/stub-mock.ts'),
+      '@claude-flow/embeddings': path.resolve(__dirname, './__tests__/mocks/stub-mock.ts'),
+      '@claude-flow/guidance/analyzer': path.resolve(__dirname, './__tests__/mocks/stub-mock.ts'),
+      '@claude-flow/guidance/compiler': path.resolve(__dirname, './__tests__/mocks/stub-mock.ts'),
+      '@claude-flow/guidance/gates': path.resolve(__dirname, './__tests__/mocks/stub-mock.ts'),
+      '@claude-flow/guidance/retriever': path.resolve(__dirname, './__tests__/mocks/stub-mock.ts'),
+      '@claude-flow/memory': path.resolve(__dirname, './__tests__/mocks/stub-mock.ts'),
     },
   },
 });

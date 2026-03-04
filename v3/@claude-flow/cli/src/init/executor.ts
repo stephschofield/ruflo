@@ -903,6 +903,195 @@ async function copyCommands(
 }
 
 /**
+ * Default handoffs for agent types in Copilot mode.
+ * Maps source agent type keywords to appropriate handoff targets.
+ */
+const COPILOT_DEFAULT_HANDOFFS: Record<string, Array<{ agent: string; label: string; prompt: string }>> = {
+  coordinator: [
+    { agent: 'researcher', label: 'Task requires investigation', prompt: 'task requires investigation or analysis before implementation' },
+    { agent: 'architect', label: 'Task involves system design', prompt: 'task involves system design decisions' },
+    { agent: 'coder', label: 'Ready for implementation', prompt: 'requirements are clear and implementation can begin' },
+    { agent: 'tester', label: 'Code needs test coverage', prompt: 'code is written and needs test coverage' },
+    { agent: 'reviewer', label: 'Implementation needs review', prompt: 'implementation is complete and needs review' },
+  ],
+  developer: [
+    { agent: 'tester', label: 'Implementation complete, needs tests', prompt: 'implementation is complete and needs test coverage' },
+    { agent: 'reviewer', label: 'Code ready for review', prompt: 'code is ready for review' },
+    { agent: 'coordinator', label: 'Scope changes or blockers', prompt: 'scope changes or blockers arise' },
+  ],
+  analyst: [
+    { agent: 'architect', label: 'Architecture decisions needed', prompt: 'research reveals architectural decisions needed' },
+    { agent: 'coder', label: 'Ready for implementation', prompt: 'research is complete and implementation can begin' },
+    { agent: 'coordinator', label: 'Scope changes or blockers', prompt: 'scope changes or blockers arise' },
+  ],
+  tester: [
+    { agent: 'coder', label: 'Code fixes needed', prompt: 'tests fail and code needs fixes' },
+    { agent: 'reviewer', label: 'Ready for code review', prompt: 'tests pass and implementation needs code review' },
+    { agent: 'coordinator', label: 'Scope issues or blockers', prompt: 'testing reveals scope issues or blockers' },
+  ],
+  security: [
+    { agent: 'coder', label: 'Vulnerabilities need fixing', prompt: 'audit finds vulnerabilities that need fixing' },
+    { agent: 'coordinator', label: 'Systemic security issues', prompt: 'audit reveals systemic security issues' },
+  ],
+  default: [
+    { agent: 'coordinator', label: 'Task completes or needs coordination', prompt: 'task completes or needs broader coordination' },
+  ],
+};
+
+/**
+ * Agent types that should be user-invocable by default.
+ */
+const USER_INVOCABLE_TYPES = new Set([
+  'developer', 'analyst', 'tester', 'code-analyzer', 'specialist',
+  'architecture', 'optimization', 'agent',
+]);
+
+/**
+ * Agent types that should have the `agents` field (can delegate to sub-agents).
+ */
+const DELEGATING_TYPES = new Set([
+  'coordinator', 'coordination', 'orchestration',
+]);
+
+/**
+ * Parse YAML frontmatter from a markdown file.
+ * Returns the parsed key-value pairs and the body content after frontmatter.
+ */
+function parseAgentFrontmatter(content: string): { meta: Record<string, string>; body: string } {
+  const meta: Record<string, string> = {};
+  let body = content;
+
+  if (!content.startsWith('---')) {
+    return { meta, body };
+  }
+
+  const endIdx = content.indexOf('\n---', 3);
+  if (endIdx === -1) {
+    return { meta, body };
+  }
+
+  const frontmatter = content.substring(3, endIdx).trim();
+  body = content.substring(endIdx + 4).trim();
+
+  // Parse simple top-level scalar fields only (name, description, type, etc.)
+  for (const line of frontmatter.split('\n')) {
+    const match = line.match(/^(\w[\w-]*)\s*:\s*(.+)$/);
+    if (match) {
+      const key = match[1];
+      const value = match[2].replace(/^["']|["']$/g, '').trim();
+      meta[key] = value;
+    }
+  }
+
+  return { meta, body };
+}
+
+/**
+ * Convert a Claude Code agent .md file to Copilot .agent.md format.
+ * Strips Claude Code-specific fields and adds Copilot frontmatter.
+ */
+function convertToCopilotAgent(content: string): string {
+  const { meta, body } = parseAgentFrontmatter(content);
+
+  const name = meta.name || 'unknown';
+  const description = meta.description || '';
+  const agentType = (meta.type || 'default').toLowerCase().replace(/^["']|["']$/g, '');
+
+  // Determine handoffs based on agent type
+  const handoffsKey = COPILOT_DEFAULT_HANDOFFS[agentType] ? agentType : 'default';
+  // Developers, testers, analysts get developer-style handoffs
+  const effectiveKey = ['developer', 'development'].includes(agentType) ? 'developer'
+    : ['analyst', 'analysis'].includes(agentType) ? 'analyst'
+    : ['tester', 'validator'].includes(agentType) ? 'tester'
+    : ['security'].includes(agentType) ? 'security'
+    : ['coordinator', 'coordination', 'orchestration'].includes(agentType) ? 'coordinator'
+    : handoffsKey;
+
+  const handoffs = COPILOT_DEFAULT_HANDOFFS[effectiveKey] || COPILOT_DEFAULT_HANDOFFS.default;
+
+  // Build YAML frontmatter
+  const lines: string[] = ['---'];
+  lines.push(`name: ${name}`);
+  lines.push(`description: ${description}`);
+
+  // Tools
+  if (DELEGATING_TYPES.has(agentType)) {
+    lines.push('tools:');
+    lines.push('  - ruflo');
+    lines.push('  - agent');
+  } else {
+    lines.push('tools:');
+    lines.push('  - ruflo');
+  }
+
+  // Model
+  lines.push('model:');
+  lines.push('  - claude-sonnet-4');
+  lines.push('  - gpt-4.1');
+
+  // Agents field for coordinators
+  if (DELEGATING_TYPES.has(agentType)) {
+    lines.push('agents:');
+    lines.push('  - coder');
+    lines.push('  - tester');
+    lines.push('  - reviewer');
+    lines.push('  - researcher');
+  }
+
+  // Handoffs
+  lines.push('handoffs:');
+  for (const h of handoffs) {
+    lines.push(`  - agent: ${h.agent}`);
+    lines.push(`    label: ${h.label}`);
+    lines.push(`    prompt: ${h.prompt}`);
+  }
+
+  // User-invocable
+  const isUserInvocable = USER_INVOCABLE_TYPES.has(agentType)
+    || ['coder', 'planner', 'researcher', 'reviewer', 'tester'].includes(name);
+  lines.push(`user-invocable: ${isUserInvocable}`);
+
+  if (!isUserInvocable && DELEGATING_TYPES.has(agentType)) {
+    lines.push('disable-model-invocation: true');
+  }
+
+  lines.push('---');
+  lines.push('');
+
+  // Append body content (everything after the original frontmatter)
+  if (body) {
+    lines.push(body);
+  }
+
+  return lines.join('\n');
+}
+
+/**
+ * Recursively collect all .md agent files from a directory.
+ * Returns map of agentName -> filePath (first occurrence wins for dedup).
+ */
+function collectAgentFiles(dir: string, seen: Map<string, string>): void {
+  if (!fs.existsSync(dir)) return;
+
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+
+  // Process files first, then directories (shallow files take priority)
+  const files = entries.filter(e => !e.isDirectory() && e.name.endsWith('.md'));
+  const dirs = entries.filter(e => e.isDirectory());
+
+  for (const file of files) {
+    const agentName = file.name.replace(/\.md$/, '');
+    if (!seen.has(agentName)) {
+      seen.set(agentName, path.join(dir, file.name));
+    }
+  }
+
+  for (const subdir of dirs) {
+    collectAgentFiles(path.join(dir, subdir.name), seen);
+  }
+}
+
+/**
  * Copy agents from source
  */
 async function copyAgents(
@@ -943,21 +1132,47 @@ async function copyAgents(
     return;
   }
 
-  // Copy each agent category
-  for (const agentCategory of [...new Set(agentsToCopy)]) {
-    const sourcePath = path.join(sourceAgentsDir, agentCategory);
-    const targetPath = path.join(targetAgentsDir, agentCategory);
+  if (isCopilot) {
+    // Copilot mode: flatten category directories into .github/agents/{name}.agent.md
+    // with converted YAML frontmatter
+    fs.mkdirSync(targetAgentsDir, { recursive: true });
 
-    if (fs.existsSync(sourcePath)) {
-      if (!fs.existsSync(targetPath) || options.force) {
-        copyDirRecursive(sourcePath, targetPath);
-        // Count agent files (.yaml and .md)
-        const yamlFiles = countFiles(sourcePath, '.yaml');
-        const mdFiles = countFiles(sourcePath, '.md');
-        result.summary.agentsCount += yamlFiles + mdFiles;
-        result.created.files.push(`${agentsRelDir}/${agentCategory}`);
+    const allAgentFiles = new Map<string, string>();
+    for (const agentCategory of [...new Set(agentsToCopy)]) {
+      const sourcePath = path.join(sourceAgentsDir, agentCategory);
+      collectAgentFiles(sourcePath, allAgentFiles);
+    }
+
+    for (const [agentName, sourceFile] of allAgentFiles) {
+      const targetFile = path.join(targetAgentsDir, `${agentName}.agent.md`);
+
+      if (!fs.existsSync(targetFile) || options.force) {
+        const sourceContent = fs.readFileSync(sourceFile, 'utf-8');
+        const converted = convertToCopilotAgent(sourceContent);
+        fs.writeFileSync(targetFile, converted, 'utf-8');
+        result.summary.agentsCount++;
+        result.created.files.push(`${agentsRelDir}/${agentName}.agent.md`);
       } else {
-        result.skipped.push(`${agentsRelDir}/${agentCategory}`);
+        result.skipped.push(`${agentsRelDir}/${agentName}.agent.md`);
+      }
+    }
+  } else {
+    // Claude Code mode: copy category directories as-is
+    for (const agentCategory of [...new Set(agentsToCopy)]) {
+      const sourcePath = path.join(sourceAgentsDir, agentCategory);
+      const targetPath = path.join(targetAgentsDir, agentCategory);
+
+      if (fs.existsSync(sourcePath)) {
+        if (!fs.existsSync(targetPath) || options.force) {
+          copyDirRecursive(sourcePath, targetPath);
+          // Count agent files (.yaml and .md)
+          const yamlFiles = countFiles(sourcePath, '.yaml');
+          const mdFiles = countFiles(sourcePath, '.md');
+          result.summary.agentsCount += yamlFiles + mdFiles;
+          result.created.files.push(`${agentsRelDir}/${agentCategory}`);
+        } else {
+          result.skipped.push(`${agentsRelDir}/${agentCategory}`);
+        }
       }
     }
   }

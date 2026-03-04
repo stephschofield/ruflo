@@ -178,6 +178,37 @@ vi.mock('../src/output.js', () => ({
   }
 }));
 
+// Mock memory-initializer (memory search/list bypass MCP and call this directly)
+vi.mock('../src/memory/memory-initializer.js', () => ({
+  searchEntries: vi.fn(async (options: { query?: string }) => ({
+    success: true,
+    results: [
+      { id: 'r1', key: 'result-1', content: 'auth pattern 1', score: 0.95, namespace: 'default' },
+      { id: 'r2', key: 'result-2', content: 'auth pattern 2', score: 0.85, namespace: 'default' }
+    ],
+    searchTime: 1
+  })),
+  listEntries: vi.fn(async () => ({
+    success: true,
+    entries: [
+      { id: 'e1', key: 'entry-1', namespace: 'default', size: 100, accessCount: 10, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z', hasEmbedding: false },
+      { id: 'e2', key: 'entry-2', namespace: 'patterns', size: 200, accessCount: 5, createdAt: '2024-01-01T00:01:00Z', updatedAt: '2024-01-01T00:01:00Z', hasEmbedding: true }
+    ],
+    total: 2
+  })),
+  storeEntry: vi.fn(async () => ({ success: true, id: 'stored-1' })),
+  getEntry: vi.fn(async (options: { key?: string }) => ({
+    success: true,
+    entry: { id: 'e1', key: options?.key || 'test-key', content: 'test-value', namespace: 'default' }
+  })),
+  deleteEntry: vi.fn(async () => ({ success: true, deleted: true })),
+  initializeMemoryDatabase: vi.fn(async () => ({ success: true })),
+  checkMemoryInitialization: vi.fn(async () => ({ initialized: true })),
+  getHNSWIndex: vi.fn(async () => null),
+  getHNSWStatus: vi.fn(() => ({ initialized: false, entryCount: 0, dimensions: 384 })),
+  getInitialMetadata: vi.fn(() => '{}')
+}));
+
 // Mock prompts (always return default values for non-interactive tests)
 vi.mock('../src/prompt.js', () => ({
   select: vi.fn(async (opts) => opts.default || opts.options[0]?.value),
