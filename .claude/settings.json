@@ -85,7 +85,7 @@
           },
           {
             "type": "command",
-            "command": "node \"$(git rev-parse --show-toplevel)/.claude/helpers/auto-memory-hook.mjs\" import",
+            "command": "node \"$(git rev-parse --show-toplevel)/.github/hooks/auto-memory-hook.mjs\" import",
             "timeout": 8000
           }
         ]
@@ -107,7 +107,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$(git rev-parse --show-toplevel)/.claude/helpers/auto-memory-hook.mjs\" sync",
+            "command": "node \"$(git rev-parse --show-toplevel)/.github/hooks/auto-memory-hook.mjs\" sync",
             "timeout": 10000
           }
         ]

@@ -6,6 +6,11 @@
       "description": "Initialize ruflo session context and load patterns"
     },
     {
+      "event": "SessionStart",
+      "command": "node .github/hooks/auto-memory-hook.mjs import 2>/dev/null || true",
+      "description": "Import auto memory entries into bridge on session start"
+    },
+    {
       "event": "UserPromptSubmit",
       "command": "npx ruflo hooks pre-task --description \"$PROMPT\"",
       "description": "Pre-process user prompts for routing and context enrichment"
@@ -33,6 +38,11 @@
       "command": "npx ruflo hooks post-command --command \"$TOOL_INPUT_command\" --success \"$TOOL_SUCCESS\"",
       "matcher": "^Bash$",
       "description": "Post-process terminal commands for learning"
+    },
+    {
+      "event": "Stop",
+      "command": "node .github/hooks/auto-memory-hook.mjs sync 2>/dev/null || true",
+      "description": "Sync auto memory insights back to MEMORY.md on stop"
     },
     {
       "event": "Stop",

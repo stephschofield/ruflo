@@ -314,11 +314,11 @@ function mergeSettingsForUpgrade(existing: Record<string, unknown>): Record<stri
 
   // Platform-specific auto-memory hook commands
   const autoMemoryImportCmd = isWindows
-    ? 'node .claude/helpers/auto-memory-hook.mjs import 2>$null; exit 0'
-    : 'node .claude/helpers/auto-memory-hook.mjs import 2>/dev/null || true';
+    ? 'node .github/hooks/auto-memory-hook.mjs import 2>$null; exit 0'
+    : 'node .github/hooks/auto-memory-hook.mjs import 2>/dev/null || true';
   const autoMemorySyncCmd = isWindows
-    ? 'node .claude/helpers/auto-memory-hook.mjs sync 2>$null; exit 0'
-    : 'node .claude/helpers/auto-memory-hook.mjs sync 2>/dev/null || true';
+    ? 'node .github/hooks/auto-memory-hook.mjs sync 2>$null; exit 0'
+    : 'node .github/hooks/auto-memory-hook.mjs sync 2>/dev/null || true';
 
   // Add auto-memory import to SessionStart (if not already present)
   const sessionStartHooks = existingHooks.SessionStart as Array<{ hooks?: Array<{ command?: string }> }> | undefined;
@@ -446,8 +446,11 @@ export async function executeUpgrade(targetDir: string, upgradeSettings = false)
     // 0. ALWAYS update critical helpers (force overwrite)
     const sourceHelpersForUpgrade = findSourceHelpersDir();
     if (sourceHelpersForUpgrade) {
-      const criticalHelpers = ['auto-memory-hook.mjs', 'hook-handler.cjs', 'intelligence.cjs'];
-      for (const helperName of criticalHelpers) {
+      // auto-memory-hook goes to .github/hooks/, other helpers stay in .claude/helpers/
+      const claudeHelpers = ['hook-handler.cjs', 'intelligence.cjs'];
+      const githubHooksHelpers = ['auto-memory-hook.mjs'];
+
+      for (const helperName of claudeHelpers) {
         const targetPath = path.join(targetDir, '.claude', 'helpers', helperName);
         const sourcePath = path.join(sourceHelpersForUpgrade, helperName);
         if (fs.existsSync(sourcePath)) {
@@ -460,14 +463,35 @@ export async function executeUpgrade(targetDir: string, upgradeSettings = false)
           try { fs.chmodSync(targetPath, '755'); } catch {}
         }
       }
+
+      for (const helperName of githubHooksHelpers) {
+        const targetPath = path.join(targetDir, '.github', 'hooks', helperName);
+        const sourcePath = path.join(sourceHelpersForUpgrade, helperName);
+        if (fs.existsSync(sourcePath)) {
+          // Ensure .github/hooks/ directory exists
+          const hooksDir = path.join(targetDir, '.github', 'hooks');
+          if (!fs.existsSync(hooksDir)) {
+            fs.mkdirSync(hooksDir, { recursive: true });
+          }
+          if (fs.existsSync(targetPath)) {
+            result.updated.push(`.github/hooks/${helperName}`);
+          } else {
+            result.created.push(`.github/hooks/${helperName}`);
+          }
+          fs.copyFileSync(sourcePath, targetPath);
+          try { fs.chmodSync(targetPath, '755'); } catch {}
+        }
+      }
+        }
+      }
     } else {
       // Source not found (npx with broken paths) — use generated fallbacks
-      const generatedCritical: Record<string, string> = {
+      // .claude/helpers/ gets hook-handler and intelligence; .github/hooks/ gets auto-memory
+      const claudeGeneratedHelpers: Record<string, string> = {
         'hook-handler.cjs': generateHookHandler(),
         'intelligence.cjs': generateIntelligenceStub(),
-        'auto-memory-hook.mjs': generateAutoMemoryHook(),
       };
-      for (const [helperName, content] of Object.entries(generatedCritical)) {
+      for (const [helperName, content] of Object.entries(claudeGeneratedHelpers)) {
         const targetPath = path.join(targetDir, '.claude', 'helpers', helperName);
         if (fs.existsSync(targetPath)) {
           result.updated.push(`.claude/helpers/${helperName}`);
@@ -477,6 +501,20 @@ export async function executeUpgrade(targetDir: string, upgradeSettings = false)
         fs.writeFileSync(targetPath, content, 'utf-8');
         try { fs.chmodSync(targetPath, '755'); } catch {}
       }
+
+      // Write auto-memory-hook to .github/hooks/
+      const githubHooksDir = path.join(targetDir, '.github', 'hooks');
+      if (!fs.existsSync(githubHooksDir)) {
+        fs.mkdirSync(githubHooksDir, { recursive: true });
+      }
+      const autoMemoryPath = path.join(githubHooksDir, 'auto-memory-hook.mjs');
+      if (fs.existsSync(autoMemoryPath)) {
+        result.updated.push('.github/hooks/auto-memory-hook.mjs');
+      } else {
+        result.created.push('.github/hooks/auto-memory-hook.mjs');
+      }
+      fs.writeFileSync(autoMemoryPath, generateAutoMemoryHook(), 'utf-8');
+      try { fs.chmodSync(autoMemoryPath, '755'); } catch {}
     }
 
     // 1. ALWAYS update statusline helper (force overwrite)
@@ -1317,7 +1355,6 @@ async function writeHelpers(
     'memory.js': generateMemoryHelper(),
     'hook-handler.cjs': generateHookHandler(),
     'intelligence.cjs': generateIntelligenceStub(),
-    'auto-memory-hook.mjs': generateAutoMemoryHook(),
   };
 
   for (const [name, content] of Object.entries(helpers)) {
@@ -1335,6 +1372,20 @@ async function writeHelpers(
     } else {
       result.skipped.push(`.claude/helpers/${name}`);
     }
+  }
+
+  // Write auto-memory-hook to .github/hooks/ instead of .claude/helpers/
+  const githubHooksDir = path.join(targetDir, '.github', 'hooks');
+  if (!fs.existsSync(githubHooksDir)) {
+    fs.mkdirSync(githubHooksDir, { recursive: true });
+  }
+  const autoMemoryPath = path.join(githubHooksDir, 'auto-memory-hook.mjs');
+  if (!fs.existsSync(autoMemoryPath) || options.force) {
+    fs.writeFileSync(autoMemoryPath, generateAutoMemoryHook(), 'utf-8');
+    fs.chmodSync(autoMemoryPath, '755');
+    result.created.files.push('.github/hooks/auto-memory-hook.mjs');
+  } else {
+    result.skipped.push('.github/hooks/auto-memory-hook.mjs');
   }
 }
 

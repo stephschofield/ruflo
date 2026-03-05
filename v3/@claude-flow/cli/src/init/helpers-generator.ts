@@ -854,7 +854,7 @@ try {
       process.exit(1);
   }
 } catch (err) {
-  // Hooks must never crash Claude Code - fail silently
+  // Hooks must never crash the session - fail silently
   dim(\`Error (non-critical): \${err.message}\`);
 }
 `;

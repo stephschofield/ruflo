@@ -3,7 +3,7 @@
 **Branch:** `copilot_usage_implementation`  
 **Source Plan:** [COPILOT_MIGRATION_ASSESSMENT.md](./COPILOT_MIGRATION_ASSESSMENT.md)  
 **Created:** 2026-03-03  
-**Updated:** 2026-03-05 (Task 5.3 complete)  
+**Updated:** 2026-03-05 (Task 5.4 complete)  
 **Strategy:** Native Copilot rebuild — Copilot as primary platform  
 
 ---
@@ -16,7 +16,7 @@
 | **Phase 2** | Agent Conversion (All 60+ Agents) | 4 | Complete (4/4) |
 | **Phase 3** | Configuration Generation | 5 | Complete (5/5) |
 | **Phase 4** | MCP Tool Curation | 3 | Complete (3/3) |
-| **Phase 5** | Integration & Cleanup | 5 | In Progress (3/5) |
+| **Phase 5** | Integration & Cleanup | 5 | In Progress (4/5) |
 
 **Total:** 22 tasks  
 **Estimated files rewritten:** ~25-30 TypeScript + 90 agent definitions  
@@ -739,18 +739,33 @@ Final cleanup, cross-cutting concerns, and test updates.
 
 ### Task 5.4 — Rewrite auto-memory hook
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[x]` Complete
 - **Priority:** P2
 - **Depends on:** Task 1.5
 - **Scope:** Rewrite for `.github/` paths instead of `.claude/` paths
 
 **Acceptance Criteria:**
-- [ ] Auto-memory hook reads/writes `.github/` paths
-- [ ] No `.claude/helpers/` references remain
-- [ ] Memory integration with Copilot conversation context
+- [x] Auto-memory hook reads/writes `.github/` paths
+- [x] No `.claude/helpers/` references remain
+- [x] Memory integration with Copilot conversation context
+
+**Completion Notes:**
+- Created `.github/hooks/auto-memory-hook.mjs` — full rewrite with Copilot-compatible comments
+- Updated `.github/hooks/hooks.json` — added SessionStart import and Stop sync entries
+- Updated `settings-generator.ts` — path refs → `.github/hooks/auto-memory-hook.mjs`
+- Updated `executor.ts` — upgrade and fallback generation now writes to `.github/hooks/`
+- Updated `helpers-generator.ts` — removed "Claude Code" from crash guard comment
+- Updated `.claude/settings.json` (root + CLI) — hook command paths → `.github/hooks/`
+- Zero `.claude/helpers/auto-memory` references remain in source code
 
 **Files:**
-- `.claude/helpers/auto-memory-hook.mjs` (rewrite → `.github/hooks/`)
+- `.github/hooks/auto-memory-hook.mjs` (new — replaces `.claude/helpers/auto-memory-hook.mjs`)
+- `.github/hooks/hooks.json` (updated)
+- `v3/@claude-flow/cli/src/init/executor.ts` (updated)
+- `v3/@claude-flow/cli/src/init/settings-generator.ts` (updated)
+- `v3/@claude-flow/cli/src/init/helpers-generator.ts` (updated)
+- `.claude/settings.json` (updated)
+- `v3/@claude-flow/cli/.claude/settings.json` (updated)
 
 ---
 

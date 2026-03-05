@@ -288,7 +288,7 @@ function generateHooksConfig(config: HooksConfig): object {
           },
           {
             type: 'command',
-            command: 'node .claude/helpers/auto-memory-hook.mjs import',
+            command: 'node .github/hooks/auto-memory-hook.mjs import',
             timeout: 8000,
           },
         ],
@@ -318,7 +318,7 @@ function generateHooksConfig(config: HooksConfig): object {
         hooks: [
           {
             type: 'command',
-            command: 'node .claude/helpers/auto-memory-hook.mjs sync',
+            command: 'node .github/hooks/auto-memory-hook.mjs sync',
             timeout: 10000,
           },
         ],
