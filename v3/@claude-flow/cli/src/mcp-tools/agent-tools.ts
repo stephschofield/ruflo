@@ -14,8 +14,8 @@ const STORAGE_DIR = '.claude-flow';
 const AGENT_DIR = 'agents';
 const AGENT_FILE = 'store.json';
 
-// Model types matching Claude Agent SDK
-type ClaudeModel = 'haiku' | 'sonnet' | 'opus' | 'inherit';
+// Provider-agnostic model tiers for agent routing
+type ModelTier = 'fast' | 'balanced' | 'capable' | 'inherit';
 
 interface AgentRecord {
   agentId: string;
@@ -26,7 +26,7 @@ interface AgentRecord {
   config: Record<string, unknown>;
   createdAt: string;
   domain?: string;
-  model?: ClaudeModel;  // Model assigned to this agent
+  model?: ModelTier;  // Model tier assigned to this agent
   modelRoutedBy?: 'explicit' | 'router' | 'agent-booster' | 'default';  // How model was determined (ADR-026)
 }
 
@@ -68,23 +68,23 @@ function saveAgentStore(store: AgentStore): void {
   writeFileSync(getAgentPath(), JSON.stringify(store, null, 2), 'utf-8');
 }
 
-// Default model mappings for agent types (can be overridden)
-const AGENT_TYPE_MODEL_DEFAULTS: Record<string, ClaudeModel> = {
-  // Complex agents → opus
-  'architect': 'opus',
-  'security-architect': 'opus',
-  'system-architect': 'opus',
-  'core-architect': 'opus',
-  // Medium complexity → sonnet
-  'coder': 'sonnet',
-  'reviewer': 'sonnet',
-  'researcher': 'sonnet',
-  'tester': 'sonnet',
-  'analyst': 'sonnet',
-  // Simple/fast agents → haiku
-  'formatter': 'haiku',
-  'linter': 'haiku',
-  'documenter': 'haiku',
+// Default model tier mappings for agent types (can be overridden)
+const AGENT_TYPE_MODEL_DEFAULTS: Record<string, ModelTier> = {
+  // Complex agents → capable (maps to claude-sonnet-4, gpt-4.1, etc.)
+  'architect': 'capable',
+  'security-architect': 'capable',
+  'system-architect': 'capable',
+  'core-architect': 'capable',
+  // Medium complexity → balanced
+  'coder': 'balanced',
+  'reviewer': 'balanced',
+  'researcher': 'balanced',
+  'tester': 'balanced',
+  'analyst': 'balanced',
+  // Simple/fast agents → fast
+  'formatter': 'fast',
+  'linter': 'fast',
+  'documenter': 'fast',
 };
 
 // Lazy-loaded model router
@@ -104,26 +104,26 @@ async function getModelRouter() {
 }
 
 /**
- * Determine model for agent based on (ADR-026 3-tier routing):
- * 1. Explicit model in config
+ * Determine model tier for agent based on (ADR-026 3-tier routing):
+ * 1. Explicit model tier in config
  * 2. Enhanced task-based routing with Agent Booster AST (if task provided)
  * 3. Agent type defaults
- * 4. Fallback to sonnet
+ * 4. Fallback to balanced
  */
 async function determineAgentModel(
   agentType: string,
   config: Record<string, unknown>,
   task?: string
 ): Promise<{
-  model: ClaudeModel;
+  model: ModelTier;
   routedBy: 'explicit' | 'router' | 'agent-booster' | 'default';
   canSkipLLM?: boolean;
   agentBoosterIntent?: string;
   tier?: 1 | 2 | 3;
 }> {
-  // 1. Explicit model in config
-  if (config.model && ['haiku', 'sonnet', 'opus', 'inherit'].includes(config.model as string)) {
-    return { model: config.model as ClaudeModel, routedBy: 'explicit' };
+  // 1. Explicit model tier in config
+  if (config.model && ['fast', 'balanced', 'capable', 'inherit'].includes(config.model as string)) {
+    return { model: config.model as ModelTier, routedBy: 'explicit' };
   }
 
   // 2. Enhanced task-based routing with Agent Booster AST
@@ -137,7 +137,7 @@ async function determineAgentModel(
       if (routeResult.tier === 1 && routeResult.canSkipLLM) {
         // Agent Booster can handle this task
         return {
-          model: 'haiku', // Use haiku as fallback if AB fails
+          model: 'fast', // Use fast tier as fallback if AB fails
           routedBy: 'agent-booster',
           canSkipLLM: true,
           agentBoosterIntent: routeResult.agentBoosterIntent?.type,
@@ -145,8 +145,14 @@ async function determineAgentModel(
         };
       }
 
+      // Map router model names to tiers
+      const routerModelToTier = (m: string): ModelTier => {
+        if (m === 'haiku') return 'fast';
+        if (m === 'opus') return 'capable';
+        return 'balanced'; // sonnet and any unknown → balanced
+      };
       return {
-        model: routeResult.model!,
+        model: routerModelToTier(routeResult.model!),
         routedBy: 'router',
         tier: routeResult.tier,
       };
@@ -156,7 +162,12 @@ async function determineAgentModel(
       if (router) {
         try {
           const result = await router.route(task);
-          return { model: result.model, routedBy: 'router' };
+          const routerModelToTier = (m: string): ModelTier => {
+            if (m === 'haiku') return 'fast';
+            if (m === 'opus') return 'capable';
+            return 'balanced';
+          };
+          return { model: routerModelToTier(result.model), routedBy: 'router' };
         } catch {
           // Fall through to defaults on router error
         }
@@ -170,8 +181,8 @@ async function determineAgentModel(
     return { model: defaultModel, routedBy: 'default' };
   }
 
-  // 4. Fallback to sonnet (balanced)
-  return { model: 'sonnet', routedBy: 'default' };
+  // 4. Fallback to balanced tier
+  return { model: 'balanced', routedBy: 'default' };
 }
 
 export const agentTools: MCPTool[] = [
@@ -188,8 +199,8 @@ export const agentTools: MCPTool[] = [
         domain: { type: 'string', description: 'Agent domain' },
         model: {
           type: 'string',
-          enum: ['haiku', 'sonnet', 'opus', 'inherit'],
-          description: 'Claude model to use (haiku=fast/cheap, sonnet=balanced, opus=most capable)'
+          enum: ['fast', 'balanced', 'capable', 'inherit'],
+          description: 'Model tier to use (fast=quick/cheap, balanced=default, capable=most powerful)'
         },
         task: { type: 'string', description: 'Task description for intelligent model routing' },
       },

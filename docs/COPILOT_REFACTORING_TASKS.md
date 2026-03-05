@@ -3,7 +3,7 @@
 **Branch:** `copilot_usage_implementation`  
 **Source Plan:** [COPILOT_MIGRATION_ASSESSMENT.md](./COPILOT_MIGRATION_ASSESSMENT.md)  
 **Created:** 2026-03-03  
-**Updated:** 2026-03-05 (Task 5.2 complete)  
+**Updated:** 2026-03-05 (Task 5.3 complete)  
 **Strategy:** Native Copilot rebuild — Copilot as primary platform  
 
 ---
@@ -16,7 +16,7 @@
 | **Phase 2** | Agent Conversion (All 60+ Agents) | 4 | Complete (4/4) |
 | **Phase 3** | Configuration Generation | 5 | Complete (5/5) |
 | **Phase 4** | MCP Tool Curation | 3 | Complete (3/3) |
-| **Phase 5** | Integration & Cleanup | 5 | In Progress (2/5) |
+| **Phase 5** | Integration & Cleanup | 5 | In Progress (3/5) |
 
 **Total:** 22 tasks  
 **Estimated files rewritten:** ~25-30 TypeScript + 90 agent definitions  
@@ -708,7 +708,7 @@ Final cleanup, cross-cutting concerns, and test updates.
 
 ### Task 5.3 — Update model routing in agent tools
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[x]` **Complete** (2026-03-05)
 - **Priority:** P2
 - **Depends on:** Phase 1
 - **Scope:** Replace hardcoded model IDs with Copilot logical model names
@@ -719,9 +719,18 @@ Final cleanup, cross-cutting concerns, and test updates.
 - Two separate model naming systems: frontmatter (logical) vs worker executor (provider-specific)
 
 **Acceptance Criteria:**
-- [ ] Agent frontmatter uses logical model names
-- [ ] Worker executor uses provider-specific model IDs
-- [ ] No hardcoded Claude-specific model IDs in agent tools
+- [x] Agent frontmatter uses logical model names
+- [x] Worker executor uses provider-specific model IDs
+- [x] No hardcoded Claude-specific model IDs in agent tools
+
+**Completion Notes:**
+- Renamed `ClaudeModel` type → `ModelTier` with provider-agnostic values: `'fast' | 'balanced' | 'capable' | 'inherit'`
+- Updated `AGENT_TYPE_MODEL_DEFAULTS` to map agent types to tiers: architect→capable, coder→balanced, formatter→fast
+- Updated `determineAgentModel()` to use tier names, with `routerModelToTier()` adapter to translate model router output (haiku/sonnet/opus) → tier names
+- Updated `agent_spawn` schema: enum `['fast', 'balanced', 'capable', 'inherit']`, description provider-agnostic
+- Fallback model changed from `'sonnet'` → `'balanced'`
+- Agent Booster fallback changed from `'haiku'` → `'fast'`
+- Zero TypeScript compilation errors
 
 **Files:**
 - `v3/@claude-flow/cli/src/mcp-tools/agent-tools.ts` (rewrite)
