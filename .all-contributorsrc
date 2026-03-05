@@ -1,0 +1,35 @@
+{
+  "projectName": "ruflo",
+  "projectOwner": "stephschofield",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "commitConvention": "none",
+  "contributors": [
+    {
+      "login": "ruvnet",
+      "name": "RuvNet",
+      "avatar_url": "https://avatars.githubusercontent.com/ruvnet?v=4",
+      "profile": "https://github.com/ruvnet",
+      "contributions": [
+        "code",
+        "doc",
+        "maintenance"
+      ]
+    },
+    {
+      "login": "shyamsridhar123",
+      "name": "shyamsridhar123",
+      "avatar_url": "https://avatars.githubusercontent.com/shyamsridhar123?v=4",
+      "profile": "https://github.com/shyamsridhar123",
+      "contributions": [
+        "code"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7
+}

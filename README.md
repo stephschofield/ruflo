@@ -7467,6 +7467,21 @@ cp -r ./data-backup-v2 ./data
 | 💼 Professional Implementation | [ruv.io](https://ruv.io) — Enterprise consulting, custom integrations, and production deployment |
 | 💬 Discord Community | [Agentics Foundation](https://discord.com/invite/dfxmpwkG2D) |
 
+## Contributors
+
+Thanks to these wonderful people for their contributions:
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ruvnet"><img src="https://avatars.githubusercontent.com/ruvnet?v=4&s=100" width="100px;" alt="RuvNet"/><br /><sub><b>RuvNet</b></sub></a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/shyamsridhar123"><img src="https://avatars.githubusercontent.com/shyamsridhar123?v=4&s=100" width="100px;" alt="shyamsridhar123"/><br /><sub><b>shyamsridhar123</b></sub></a></td>
+    </tr>
+  </tbody>
+</table>
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
 ## License
 
 MIT - [RuvNet](https://github.com/ruvnet)
