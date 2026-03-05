@@ -288,6 +288,8 @@ export type {
   BatchResult,
 } from './wasm-kernel.js';
 export {
+  generateCopilotInstructions,
+  generateCopilotLocalMd,
   generateClaudeMd,
   generateClaudeLocalMd,
   generateSkillMd,
@@ -300,6 +302,7 @@ export type {
   LocalProfile,
   SkillDefinition,
   AgentDefinition,
+  ScaffoldPlatform,
   ScaffoldOptions,
   ScaffoldResult,
 } from './generators.js';

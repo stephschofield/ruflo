@@ -3,7 +3,7 @@
 **Branch:** `copilot_usage_implementation`  
 **Source Plan:** [COPILOT_MIGRATION_ASSESSMENT.md](./COPILOT_MIGRATION_ASSESSMENT.md)  
 **Created:** 2026-03-03  
-**Updated:** 2026-03-04 (Task 4.2 complete)  
+**Updated:** 2026-03-05 (Task 5.1 complete)  
 **Strategy:** Native Copilot rebuild — Copilot as primary platform  
 
 ---
@@ -15,8 +15,8 @@
 | **Phase 1** | Foundation (Core Infrastructure) | 5 | Complete (5/5) |
 | **Phase 2** | Agent Conversion (All 60+ Agents) | 4 | Complete (4/4) |
 | **Phase 3** | Configuration Generation | 5 | Complete (5/5) |
-| **Phase 4** | MCP Tool Curation | 3 | In Progress (2/3) |
-| **Phase 5** | Integration & Cleanup | 5 | Not Started |
+| **Phase 4** | MCP Tool Curation | 3 | Complete (3/3) |
+| **Phase 5** | Integration & Cleanup | 5 | In Progress (1/5) |
 
 **Total:** 22 tasks  
 **Estimated files rewritten:** ~25-30 TypeScript + 90 agent definitions  
@@ -637,18 +637,31 @@ Final cleanup, cross-cutting concerns, and test updates.
 
 ### Task 5.1 — Rewrite guidance package generators
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[x]` **Complete** (2026-03-04)
 - **Priority:** P2
 - **Depends on:** Phase 3
 - **Scope:** Output Copilot-native governance config
 
 **Acceptance Criteria:**
-- [ ] `@claude-flow/guidance/src/generators.ts` — 4 Claude Code refs removed
-- [ ] Generates Copilot-native governance configuration
-- [ ] Governance rules compatible with Copilot instructions format
+- [x] `@claude-flow/guidance/src/generators.ts` — Claude Code refs made platform-aware
+- [x] Generates Copilot-native governance configuration
+- [x] Governance rules compatible with Copilot instructions format
+
+**Completion Notes:**
+- Added `generateCopilotInstructions()` — generates `.github/copilot-instructions.md` content
+- Added `generateCopilotLocalMd()` — generates `.github/local-instructions.md` content
+- Shared implementation via `generateInstructionsMd(profile, platform)` and `generateLocalMd(local, platform)`
+- `scaffold()` now accepts `platform?: 'copilot' | 'claude-code'` (defaults to `'copilot'`)
+- Copilot scaffold outputs to `.github/agents/*.agent.md`, `.github/skills/*/SKILL.md`
+- Claude Code scaffold preserved for backward-compat (`.claude/agents/`, `CLAUDE.md`, etc.)
+- Agent index only generated for Claude Code (Copilot discovers agents by file)
+- Platform-specific text: monorepo layering, local-instructions gitignore note
+- Exported `generateCopilotInstructions`, `generateCopilotLocalMd`, `ScaffoldPlatform` from index.ts
+- Zero compilation errors
 
 **Files:**
-- `v3/@claude-flow/guidance/src/generators.ts` (rewrite)
+- `v3/@claude-flow/guidance/src/generators.ts` (rewrite — platform-aware generators + scaffold)
+- `v3/@claude-flow/guidance/src/index.ts` (added exports)
 
 ---
 
