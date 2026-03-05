@@ -1,12 +1,12 @@
 /**
- * MCP Tools for TeammateTool Integration
+ * MCP Tools for Multi-Agent Team Coordination
  *
- * Exposes 21 MCP tools for multi-agent orchestration via Claude Code:
- * - 16 core TeammateTool integration tools
+ * Exposes 21 MCP tools for multi-agent orchestration:
+ * - 16 core team coordination tools
  * - 5 BMSSP optimization tools (10-15x faster with WASM)
  *
  * @module @claude-flow/teammate-plugin/mcp
- * @version 1.0.0-alpha.1
+ * @version 1.0.0-alpha.2
  */
 
 import type { TeammateBridge } from './teammate-bridge.js';
@@ -75,8 +75,8 @@ export const TEAMMATE_MCP_TOOLS: MCPTool[] = [
   {
     name: 'teammate_spawn_team',
     description:
-      'Create a new team for multi-agent collaboration using native TeammateTool. ' +
-      'Requires Claude Code >= 2.1.19.',
+      'Create a new team for multi-agent collaboration. ' +
+      'Uses Copilot subagents and MCP memory tools for coordination.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -112,7 +112,7 @@ export const TEAMMATE_MCP_TOOLS: MCPTool[] = [
 
   {
     name: 'teammate_discover_teams',
-    description: 'Discover existing teams in ~/.claude/teams/',
+    description: 'Discover existing teams in the teams data directory',
     inputSchema: {
       type: 'object',
       properties: {},
@@ -122,7 +122,7 @@ export const TEAMMATE_MCP_TOOLS: MCPTool[] = [
   {
     name: 'teammate_spawn',
     description:
-      'Spawn a new teammate in a team. Returns AgentInput for Claude Code Task tool.',
+      'Spawn a new teammate in a team. Returns SubagentConfig for delegation.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -588,13 +588,13 @@ export async function handleMCPTool(
           runInBackground: true,
         };
         const teammate = await bridge.spawnTeammate(spawnConfig);
-        const agentInput = bridge.buildAgentInput(spawnConfig);
+        const subagentConfig = bridge.buildSubagentConfig(spawnConfig);
         return {
           success: true,
           data: {
             teammate,
-            agentInput,
-            instruction: 'Pass agentInput to Claude Code Task tool to spawn the teammate',
+            subagentConfig,
+            instruction: 'Use subagentConfig to delegate work via Copilot subagents',
           },
         };
       }

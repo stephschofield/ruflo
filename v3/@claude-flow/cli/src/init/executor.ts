@@ -304,7 +304,6 @@ function mergeSettingsForUpgrade(existing: Record<string, unknown>): Record<stri
   const existingEnv = (existing.env as Record<string, string>) || {};
   merged.env = {
     ...existingEnv,
-    CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: '1',
     CLAUDE_FLOW_V3_ENABLED: existingEnv.CLAUDE_FLOW_V3_ENABLED || 'true',
     CLAUDE_FLOW_HOOKS_ENABLED: existingEnv.CLAUDE_FLOW_HOOKS_ENABLED || 'true',
   };
@@ -582,11 +581,10 @@ export async function executeUpgrade(targetDir: string, upgradeSettings = false)
           fs.writeFileSync(settingsPath, JSON.stringify(mergedSettings, null, 2), 'utf-8');
           result.updated.push('.claude/settings.json');
           result.settingsUpdated = [
-            'env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS',
             'hooks.SessionStart (auto-memory import)',
             'hooks.SessionEnd (auto-memory sync)',
-            'hooks.TeammateIdle (removed — not a valid Claude Code hook)',
-            'hooks.TaskCompleted (removed — not a valid Claude Code hook)',
+            'hooks.TeammateIdle (removed — not a valid hook)',
+            'hooks.TaskCompleted (removed — not a valid hook)',
             'claudeFlow.agentTeams',
             'claudeFlow.memory (learningBridge, memoryGraph, agentScopes)',
           ];

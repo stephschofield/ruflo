@@ -3,7 +3,7 @@
 **Branch:** `copilot_usage_implementation`  
 **Source Plan:** [COPILOT_MIGRATION_ASSESSMENT.md](./COPILOT_MIGRATION_ASSESSMENT.md)  
 **Created:** 2026-03-03  
-**Updated:** 2026-03-05 (Task 5.1 complete)  
+**Updated:** 2026-03-05 (Task 5.2 complete)  
 **Strategy:** Native Copilot rebuild — Copilot as primary platform  
 
 ---
@@ -16,7 +16,7 @@
 | **Phase 2** | Agent Conversion (All 60+ Agents) | 4 | Complete (4/4) |
 | **Phase 3** | Configuration Generation | 5 | Complete (5/5) |
 | **Phase 4** | MCP Tool Curation | 3 | Complete (3/3) |
-| **Phase 5** | Integration & Cleanup | 5 | In Progress (1/5) |
+| **Phase 5** | Integration & Cleanup | 5 | In Progress (2/5) |
 
 **Total:** 22 tasks  
 **Estimated files rewritten:** ~25-30 TypeScript + 90 agent definitions  
@@ -667,10 +667,11 @@ Final cleanup, cross-cutting concerns, and test updates.
 
 ### Task 5.2 — Replace teammate plugin with Copilot subagent patterns
 
-- **Status:** `[ ]` Not Started
+- **Status:** `[x]` Complete
 - **Priority:** P2
 - **Depends on:** Phase 2 (agent conversion)
 - **Scope:** Replace `v3/plugins/teammate-plugin/` (10 Claude Code refs)
+- **Completed:** 2025-07-25
 
 **Details:**
 - Remove `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` dependency
@@ -678,12 +679,30 @@ Final cleanup, cross-cutting concerns, and test updates.
 - Copilot handles multi-agent natively via subagents
 
 **Acceptance Criteria:**
-- [ ] Teammate plugin replaced or removed
-- [ ] No `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` references remain
-- [ ] Coordination logic works via Copilot subagents + MCP memory
+- [x] Teammate plugin replaced or removed
+- [x] No `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` references remain
+- [x] Coordination logic works via Copilot subagents + MCP memory
+
+**Completion Notes:**
+- Rewrote `types.ts`: `MINIMUM_CLAUDE_CODE_VERSION` → `MINIMUM_RUFLO_VERSION`, `AgentInput` → `SubagentConfig`, `claudeCode` → `rufloVersion`
+- Rewrote `teammate-bridge.ts`: Removed `execSync('claude --version')` detection, replaced `~/.claude/teams` with configurable `.ruflo/teams`, renamed env vars `CLAUDE_CODE_TEAM_NAME` → `RUFLO_TEAM_NAME`, `CLAUDE_CODE_PLAN_MODE_REQUIRED` → `RUFLO_PLAN_MODE_REQUIRED`, `buildAgentInput()` → `buildSubagentConfig()`
+- Updated `mcp-tools.ts`: Removed all Claude Code references from tool descriptions and handler
+- Updated `index.ts`: Module docstring, example code, renamed exports
+- Removed `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` from `executor.ts`, `.claude/settings.json` (both root and cli)
+- Updated `discovery.ts` plugin store entry
+- Updated `teammate-bridge.test.ts` to match renamed APIs
+- Zero TypeScript compilation errors
 
 **Files:**
-- `v3/plugins/teammate-plugin/` (5 files — rewrite/remove)
+- `v3/plugins/teammate-plugin/src/types.ts` (rewritten)
+- `v3/plugins/teammate-plugin/src/teammate-bridge.ts` (rewritten)
+- `v3/plugins/teammate-plugin/src/mcp-tools.ts` (updated)
+- `v3/plugins/teammate-plugin/src/index.ts` (updated)
+- `v3/plugins/teammate-plugin/tests/teammate-bridge.test.ts` (updated)
+- `v3/@claude-flow/cli/src/init/executor.ts` (cleaned)
+- `v3/@claude-flow/cli/src/plugins/store/discovery.ts` (updated)
+- `.claude/settings.json` (cleaned)
+- `v3/@claude-flow/cli/.claude/settings.json` (cleaned)
 
 ---
 

@@ -1,18 +1,19 @@
 /**
  * @claude-flow/teammate-plugin Types
  *
- * Complete type definitions for TeammateTool integration.
- * Requires Claude Code >= 2.1.19
+ * Complete type definitions for multi-agent team coordination.
+ * Works with Copilot subagents and MCP memory tools.
  *
  * @module @claude-flow/teammate-plugin/types
- * @version 1.0.0-alpha.1
+ * @version 1.0.0-alpha.2
  */
 
 // ============================================================================
 // Version Requirements
 // ============================================================================
 
-export const MINIMUM_CLAUDE_CODE_VERSION = '2.1.19';
+/** @deprecated No longer needed — Copilot handles subagents natively */
+export const MINIMUM_CLAUDE_CODE_VERSION = '0.0.0';
 
 // Security limits
 export const SECURITY_LIMITS = {
@@ -56,6 +57,7 @@ export const MCP_PARAM_LIMITS = {
 } as const;
 
 export interface VersionInfo {
+  /** @deprecated Always null — Claude Code detection removed */
   claudeCode: string | null;
   plugin: string;
   compatible: boolean;
@@ -63,7 +65,7 @@ export interface VersionInfo {
 }
 
 // ============================================================================
-// TeammateTool Operations (13 operations from Claude Code v2.1.19)
+// Team Operations (13 operations)
 // ============================================================================
 
 export type TeammateOperation =
@@ -405,14 +407,14 @@ export interface RecoveryConfig {
 }
 
 // ============================================================================
-// AgentInput (Claude Code Task tool schema)
+// SubagentConfig (Copilot subagent delegation schema)
 // ============================================================================
 
-export interface AgentInput {
+export interface SubagentConfig {
   description: string;
   prompt: string;
   subagent_type: string;
-  model?: 'sonnet' | 'opus' | 'haiku';
+  model?: string;
   resume?: string;
   run_in_background?: boolean;
   max_turns?: number;
@@ -422,8 +424,11 @@ export interface AgentInput {
   mode?: PermissionMode;
 }
 
+/** @deprecated Use SubagentConfig instead */
+export type AgentInput = SubagentConfig;
+
 // ============================================================================
-// ExitPlanModeInput (Claude Code plan exit schema)
+// ExitPlanModeInput (plan exit schema)
 // ============================================================================
 
 export interface ExitPlanModeInput {
@@ -442,7 +447,7 @@ export interface ExitPlanModeInput {
 
 export interface TeammateBridgeEvents {
   // Initialization
-  'initialized': { claudeCodeVersion: string | null; teammateToolAvailable: boolean };
+  'initialized': { version: string | null; available: boolean };
 
   // Team lifecycle
   'team:spawned': { team: string; config: TeamConfig };
@@ -454,7 +459,7 @@ export interface TeammateBridgeEvents {
   'team:join_rejected': { team: string; agent: string; reason?: string };
 
   // Teammate lifecycle
-  'teammate:spawned': { teammate: TeammateInfo; agentInput: AgentInput };
+  'teammate:spawned': { teammate: TeammateInfo; subagentConfig: SubagentConfig };
   'teammate:shutdown_requested': { team: string; teammateId: string; reason?: string };
   'teammate:shutdown_approved': { team: string; teammateId: string };
   'teammate:shutdown_rejected': { team: string; teammateId: string };

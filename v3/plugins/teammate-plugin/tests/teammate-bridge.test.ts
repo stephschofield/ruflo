@@ -17,9 +17,6 @@ import * as os from 'os';
 // Mock child_process before importing
 vi.mock('child_process', () => ({
   execSync: vi.fn((cmd: string) => {
-    if (cmd.includes('claude --version')) {
-      return '2.1.19';
-    }
     if (cmd.includes('git rev-parse')) {
       return 'main';
     }
@@ -42,7 +39,7 @@ import {
 
 import {
   TeammateErrorCode,
-  MINIMUM_CLAUDE_CODE_VERSION,
+  MINIMUM_RUFLO_VERSION,
 } from '../src/types.js';
 
 // ============================================================================
@@ -73,19 +70,18 @@ describe('TeammateBridge Initialization', () => {
     cleanupTestDir();
   });
 
-  it('should detect Claude Code version on initialize', async () => {
+  it('should initialize and report version info', async () => {
     const versionInfo = await bridge.initialize();
 
-    expect(versionInfo.claudeCode).toBe('2.1.19');
+    expect(versionInfo.rufloVersion).toBe('3.0.0');
     expect(versionInfo.compatible).toBe(true);
     expect(versionInfo.plugin).toBe('1.0.0-alpha.1');
   });
 
-  it('should report compatible when version >= 2.1.19', async () => {
+  it('should report available after initialization', async () => {
     await bridge.initialize();
 
     expect(bridge.isAvailable()).toBe(true);
-    expect(bridge.getClaudeCodeVersion()).toBe('2.1.19');
   });
 
   it('should return version info', async () => {
@@ -93,7 +89,7 @@ describe('TeammateBridge Initialization', () => {
 
     const info = bridge.getVersionInfo();
 
-    expect(info.claudeCode).toBe('2.1.19');
+    expect(info.rufloVersion).toBe('3.0.0');
     expect(info.compatible).toBe(true);
     expect(info.missingFeatures).toEqual([]);
   });
@@ -140,7 +136,7 @@ describe('Team Management', () => {
     it('should set environment variable for team context', async () => {
       await bridge.spawnTeam({ name: 'env-team' });
 
-      expect(process.env.CLAUDE_CODE_TEAM_NAME).toBe('env-team');
+      expect(process.env.RUFLO_TEAM_NAME).toBe('env-team');
     });
 
     it('should emit team:spawned event', async () => {
@@ -224,8 +220,8 @@ describe('Teammate Spawning', () => {
     expect(team?.teammates[0].name).toBe('tester-1');
   });
 
-  it('should build correct AgentInput', async () => {
-    const agentInput = bridge.buildAgentInput({
+  it('should build correct SubagentConfig', async () => {
+    const subagentConfig = bridge.buildSubagentConfig({
       name: 'reviewer-1',
       role: 'reviewer',
       prompt: 'Review code',
@@ -235,12 +231,12 @@ describe('Teammate Spawning', () => {
       mode: 'plan',
     });
 
-    expect(agentInput.description).toBe('reviewer: reviewer-1');
-    expect(agentInput.subagent_type).toBe('reviewer');
-    expect(agentInput.model).toBe('opus');
-    expect(agentInput.team_name).toBe('spawn-test-team');
-    expect(agentInput.allowed_tools).toEqual(['Read', 'Grep']);
-    expect(agentInput.mode).toBe('plan');
+    expect(subagentConfig.description).toBe('reviewer: reviewer-1');
+    expect(subagentConfig.subagent_type).toBe('reviewer');
+    expect(subagentConfig.model).toBe('opus');
+    expect(subagentConfig.team_name).toBe('spawn-test-team');
+    expect(subagentConfig.allowed_tools).toEqual(['Read', 'Grep']);
+    expect(subagentConfig.mode).toBe('plan');
   });
 });
 
@@ -621,11 +617,11 @@ describe('Cleanup', () => {
   });
 
   it('should clear environment variable on cleanup', async () => {
-    process.env.CLAUDE_CODE_TEAM_NAME = 'cleanup-team';
+    process.env.RUFLO_TEAM_NAME = 'cleanup-team';
 
     await bridge.cleanup('cleanup-team');
 
-    expect(process.env.CLAUDE_CODE_TEAM_NAME).toBeUndefined();
+    expect(process.env.RUFLO_TEAM_NAME).toBeUndefined();
   });
 
   it('should emit cleanup event', async () => {

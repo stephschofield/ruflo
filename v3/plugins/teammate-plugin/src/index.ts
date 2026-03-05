@@ -1,8 +1,8 @@
 /**
  * @claude-flow/teammate-plugin
  *
- * Native TeammateTool integration plugin for Claude Flow.
- * Bridges Claude Code v2.1.19+ multi-agent capabilities with Claude Flow.
+ * Multi-agent team coordination plugin for Ruflo.
+ * Bridges Copilot subagent capabilities with MCP memory tools.
  *
  * @example
  * ```typescript
@@ -13,7 +13,7 @@
  *
  * // Check compatibility
  * const version = bridge.getVersionInfo();
- * console.log(`Claude Code: ${version.claudeCode}, Compatible: ${version.compatible}`);
+ * console.log(`Ruflo: ${version.rufloVersion}, Compatible: ${version.compatible}`);
  *
  * // Create team
  * const team = await bridge.spawnTeam({
@@ -22,7 +22,7 @@
  *   maxTeammates: 6,
  * });
  *
- * // Spawn teammate (returns AgentInput for Task tool)
+ * // Spawn teammate (returns SubagentConfig for delegation)
  * const teammate = await bridge.spawnTeammate({
  *   name: 'coder-1',
  *   role: 'coder',
@@ -33,8 +33,7 @@
  * ```
  *
  * @module @claude-flow/teammate-plugin
- * @version 1.0.0-alpha.1
- * @requires Claude Code >= 2.1.19
+ * @version 1.0.0-alpha.2
  */
 
 // Core exports
@@ -95,7 +94,7 @@ export {
   // MCP param limits
   MCP_PARAM_LIMITS,
   // Version & Security
-  MINIMUM_CLAUDE_CODE_VERSION,
+  MINIMUM_RUFLO_VERSION,
   SECURITY_LIMITS,
   DEFAULT_PLUGIN_CONFIG,
 
@@ -153,6 +152,7 @@ export {
   type BackendStatus,
   type RecoveryConfig,
   type AgentInput,
+  type SubagentConfig,
   type ExitPlanModeInput,
   type TeammateBridgeEvents,
   type PluginConfig,

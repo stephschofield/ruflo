@@ -1,24 +1,21 @@
 /**
- * TeammateBridge - Core bridge to Claude Code's TeammateTool
+ * TeammateBridge - Multi-agent team coordination
  *
  * Provides unified API for multi-agent orchestration using
- * native TeammateTool capabilities (Claude Code >= 2.1.19).
+ * Copilot subagents and MCP memory tools.
  *
  * Features:
  * - Team management (spawn, discover, join/leave)
  * - Mailbox messaging (write, broadcast)
  * - Plan approval workflow
  * - Delegation system
- * - Remote sync to Claude.ai
  * - Session memory persistence
- * - Teleport/session resume
  *
  * @module @claude-flow/teammate-plugin/bridge
- * @version 1.0.0-alpha.1
+ * @version 1.0.0-alpha.2
  */
 
 import { EventEmitter } from 'events';
-import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
@@ -38,7 +35,7 @@ import type {
   TeammateMemory,
   TeleportTarget,
   TeleportResult,
-  AgentInput,
+  SubagentConfig,
   ExitPlanModeInput,
   VersionInfo,
   PluginConfig,
@@ -57,7 +54,6 @@ import { SemanticRouter, createSemanticRouter } from './semantic-router.js';
 import type { TaskProfile, RoutingDecision, MatchResult } from './semantic-router.js';
 
 import {
-  MINIMUM_CLAUDE_CODE_VERSION,
   DEFAULT_PLUGIN_CONFIG,
   TeammateErrorCode,
   RATE_LIMIT_DEFAULTS,
@@ -283,7 +279,9 @@ export class TeammateBridge extends EventEmitter {
   constructor(config: Partial<PluginConfig> = {}) {
     super();
     this.config = { ...DEFAULT_PLUGIN_CONFIG, ...config };
-    this.teamsDir = path.join(os.homedir(), '.claude', 'teams');
+    // Use project-local .ruflo/teams or fallback to ~/.ruflo/teams
+    this.teamsDir = (config as any).teamsDir
+      ?? path.join(process.cwd(), '.ruflo', 'teams');
 
     // Initialize rate limiter
     this.rateLimiter = new RateLimiter(DEFAULT_RATE_LIMIT_CONFIG);
@@ -321,49 +319,26 @@ export class TeammateBridge extends EventEmitter {
 
   /**
    * Initialize the bridge
-   * Detects Claude Code version and TeammateTool availability
+   * Copilot handles subagents natively — always available
    */
   async initialize(): Promise<VersionInfo> {
     if (this.initialized) {
       return this.getVersionInfo();
     }
 
-    // Detect Claude Code version
-    try {
-      const output = execSync('claude --version 2>/dev/null', {
-        encoding: 'utf-8',
-        timeout: 5000,
-      }).trim();
-
-      const match = output.match(/(\d+\.\d+\.\d+)/);
-      this.claudeCodeVersion = match?.[1] ?? null;
-
-      // TeammateTool requires >= 2.1.19
-      if (this.claudeCodeVersion) {
-        this.teammateToolAvailable =
-          compareVersions(this.claudeCodeVersion, MINIMUM_CLAUDE_CODE_VERSION) >= 0;
-      }
-    } catch {
-      this.claudeCodeVersion = null;
-      this.teammateToolAvailable = false;
-    }
+    // Copilot handles multi-agent coordination natively via subagents
+    // No external CLI version detection needed
+    this.claudeCodeVersion = null;
+    this.teammateToolAvailable = true;
 
     this.initialized = true;
 
     const versionInfo = this.getVersionInfo();
 
     this.emit('initialized', {
-      claudeCodeVersion: this.claudeCodeVersion,
-      teammateToolAvailable: this.teammateToolAvailable,
+      version: null,
+      available: true,
     });
-
-    if (!this.teammateToolAvailable) {
-      console.warn(
-        `[TeammateBridge] TeammateTool not available. ` +
-        `Requires Claude Code >= ${MINIMUM_CLAUDE_CODE_VERSION}, ` +
-        `found: ${this.claudeCodeVersion ?? 'not installed'}`
-      );
-    }
 
     return versionInfo;
   }
@@ -372,17 +347,11 @@ export class TeammateBridge extends EventEmitter {
    * Get version information
    */
   getVersionInfo(): VersionInfo {
-    const missingFeatures: string[] = [];
-
-    if (!this.teammateToolAvailable) {
-      missingFeatures.push('TeammateTool', 'team_name', 'launchSwarm');
-    }
-
     return {
-      claudeCode: this.claudeCodeVersion,
-      plugin: '1.0.0-alpha.1',
-      compatible: this.teammateToolAvailable,
-      missingFeatures,
+      claudeCode: null,
+      plugin: '1.0.0-alpha.2',
+      compatible: true,
+      missingFeatures: [],
     };
   }
 
@@ -484,10 +453,10 @@ export class TeammateBridge extends EventEmitter {
   }
 
   /**
-   * Get Claude Code version
+   * @deprecated Always returns null — Claude Code detection removed
    */
   getClaudeCodeVersion(): string | null {
-    return this.claudeCodeVersion;
+    return null;
   }
 
   // ==========================================================================
@@ -724,10 +693,10 @@ export class TeammateBridge extends EventEmitter {
     };
 
     // Set environment for team context (sanitized)
-    process.env.CLAUDE_CODE_TEAM_NAME = sanitizeEnvValue(fullConfig.name);
+    process.env.RUFLO_TEAM_NAME = sanitizeEnvValue(fullConfig.name);
 
     if (fullConfig.planModeRequired) {
-      process.env.CLAUDE_CODE_PLAN_MODE_REQUIRED = 'true';
+      process.env.RUFLO_PLAN_MODE_REQUIRED = 'true';
     }
 
     // Create team directory
@@ -973,7 +942,7 @@ export class TeammateBridge extends EventEmitter {
     // Security: Validate teammate name
     const validatedName = validateName(config.name, 'teammate');
 
-    const teamName = config.teamName ?? process.env.CLAUDE_CODE_TEAM_NAME;
+    const teamName = config.teamName ?? process.env.RUFLO_TEAM_NAME;
 
     if (teamName) {
       const team = this.activeTeams.get(teamName);
@@ -1007,8 +976,8 @@ export class TeammateBridge extends EventEmitter {
       delegatedPermissions: config.delegatedPermissions,
     };
 
-    // Build AgentInput
-    const agentInput = this.buildAgentInput({ ...config, teamName });
+    // Build SubagentConfig
+    const subagentConfig = this.buildSubagentConfig({ ...config, teamName });
 
     // Add to team
     if (teamName) {
@@ -1042,27 +1011,32 @@ export class TeammateBridge extends EventEmitter {
       });
     }
 
-    this.emit('teammate:spawned', { teammate: teammateInfo, agentInput });
+    this.emit('teammate:spawned', { teammate: teammateInfo, subagentConfig });
 
     return teammateInfo;
   }
 
   /**
-   * Build AgentInput for Claude Code Task tool
+   * Build SubagentConfig for Copilot subagent delegation
    */
-  buildAgentInput(config: TeammateSpawnConfig): AgentInput {
+  buildSubagentConfig(config: TeammateSpawnConfig): SubagentConfig {
     return {
       description: `${config.role}: ${config.name}`,
       prompt: config.prompt,
       subagent_type: config.role,
       model: config.model,
       name: config.name,
-      team_name: config.teamName ?? process.env.CLAUDE_CODE_TEAM_NAME,
+      team_name: config.teamName ?? process.env.RUFLO_TEAM_NAME,
       allowed_tools: config.allowedTools,
       mode: config.mode,
       run_in_background: config.runInBackground ?? true,
       max_turns: config.maxTurns,
     };
+  }
+
+  /** @deprecated Use buildSubagentConfig instead */
+  buildAgentInput(config: TeammateSpawnConfig): SubagentConfig {
+    return this.buildSubagentConfig(config);
   }
 
   // ==========================================================================
@@ -1628,7 +1602,7 @@ export class TeammateBridge extends EventEmitter {
 
     const team = this.getTeamOrThrow(teamName);
 
-    // This would integrate with Claude Code's pushToRemote functionality
+    // Remote session creation (placeholder — remote sync not yet implemented)
     // For now, we simulate the remote session creation
     const remoteSession: RemoteSession = {
       remoteSessionId: generateId('remote'),
@@ -2029,8 +2003,8 @@ export class TeammateBridge extends EventEmitter {
     this.activeTeams.delete(teamName);
 
     // Clear environment
-    if (process.env.CLAUDE_CODE_TEAM_NAME === teamName) {
-      delete process.env.CLAUDE_CODE_TEAM_NAME;
+    if (process.env.RUFLO_TEAM_NAME === teamName) {
+      delete process.env.RUFLO_TEAM_NAME;
     }
 
     this.emit('team:cleanup', { team: teamName });
@@ -2102,14 +2076,6 @@ export class TeammateBridge extends EventEmitter {
     if (!this.initialized) {
       throw new TeammateError(
         'TeammateBridge not initialized. Call initialize() first.',
-        TeammateErrorCode.VERSION_INCOMPATIBLE
-      );
-    }
-
-    if (!this.teammateToolAvailable && !this.config.fallbackToMCP) {
-      throw new TeammateError(
-        `TeammateTool not available. Requires Claude Code >= ${MINIMUM_CLAUDE_CODE_VERSION}, ` +
-        `found: ${this.claudeCodeVersion ?? 'not installed'}`,
         TeammateErrorCode.VERSION_INCOMPATIBLE
       );
     }
