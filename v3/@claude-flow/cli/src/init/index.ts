@@ -29,6 +29,8 @@ export {
 export {
   generateSettings,
   generateSettingsJson,
+  generateCopilotSettings,
+  generateCopilotSettingsJson,
 } from './settings-generator.js';
 
 export {

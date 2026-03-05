@@ -21,3 +21,24 @@ export { transferTools } from './transfer-tools.js';
 export { securityTools } from './security-tools.js';
 export { embeddingsTools } from './embeddings-tools.js';
 export { claimsTools } from './claims-tools.js';
+export { dashboardTools } from './dashboard-tools.js';
+
+// Tool category system
+export {
+  TOOL_CATEGORIES,
+  TOOL_PROFILES,
+  getCategoriesForProfile,
+  getCategoriesByGroup,
+  getDefaultCategories,
+  isValidCategory,
+  getCategoryMetadata,
+  getCategoryGroups,
+  resolveCategories,
+} from './tool-categories.js';
+export type {
+  ToolCategory,
+  ToolProfile,
+  CategoryGroup,
+  CategoryMetadata,
+  ProfileDefinition,
+} from './tool-categories.js';

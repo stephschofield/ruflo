@@ -292,7 +292,7 @@ export class MCPServerManager extends EventEmitter {
    */
   private async startStdioServer(): Promise<void> {
     // Import the tool registry
-    const { listMCPTools, callMCPTool, hasTool } = await import('./mcp-client.js');
+    const { callMCPTool, hasTool } = await import('./mcp-client.js');
 
     const VERSION = '3.0.0';
     const sessionId = `mcp-${Date.now()}-${randomUUID().slice(0, 8)}`;
@@ -389,7 +389,7 @@ export class MCPServerManager extends EventEmitter {
     message: { jsonrpc: string; id?: string | number; method?: string; params?: unknown },
     sessionId: string
   ): Promise<{ jsonrpc: string; id?: string | number; result?: unknown; error?: { code: number; message: string } } | null> {
-    const { listMCPTools, callMCPTool, hasTool } = await import('./mcp-client.js');
+    const { listMCPToolsForProfile, callMCPTool, hasTool } = await import('./mcp-client.js');
 
     if (!message.method) {
       return {
@@ -418,7 +418,14 @@ export class MCPServerManager extends EventEmitter {
           };
 
         case 'tools/list':
-          const tools = listMCPTools();
+          // Read tool profile from environment (set by MCP config generator)
+          // Falls back to 'default' profile (~64 core+github tools) when not set
+          const profileEnv = process.env.CLAUDE_FLOW_TOOL_PROFILE;
+          const validProfiles = ['default', 'full', 'minimal', 'development', 'ci'];
+          const activeProfile = (profileEnv && validProfiles.includes(profileEnv)
+            ? profileEnv
+            : 'default') as import('./mcp-tools/tool-categories.js').ToolProfile;
+          const tools = listMCPToolsForProfile(activeProfile);
           return {
             jsonrpc: '2.0',
             id: message.id,

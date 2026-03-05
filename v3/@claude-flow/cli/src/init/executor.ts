@@ -14,7 +14,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 import type { InitOptions, InitResult, PlatformInfo } from './types.js';
 import { detectPlatform, DEFAULT_INIT_OPTIONS } from './types.js';
-import { generateSettingsJson, generateSettings } from './settings-generator.js';
+import { generateSettingsJson, generateSettings, generateCopilotSettingsJson } from './settings-generator.js';
 import { generateMCPJson, generateCopilotMCPJson } from './mcp-generator.js';
 import { generateStatuslineScript, generateStatuslineHook } from './statusline-generator.js';
 import {
@@ -186,9 +186,13 @@ export async function executeInit(options: InitOptions): Promise<InitResult> {
     // Create directory structure
     await createDirectories(targetDir, options, result);
 
-    // Generate and write settings.json (Claude Code only)
-    if (options.components.settings && !isCopilot) {
-      await writeSettings(targetDir, options, result);
+    // Generate and write settings (platform-specific)
+    if (options.components.settings) {
+      if (isCopilot) {
+        await writeCopilotSettings(targetDir, options, result);
+      } else {
+        await writeSettings(targetDir, options, result);
+      }
     }
 
     // Generate and write MCP config
@@ -758,6 +762,32 @@ async function writeSettings(
   const content = generateSettingsJson(options);
   fs.writeFileSync(settingsPath, content, 'utf-8');
   result.created.files.push('.claude/settings.json');
+}
+
+/**
+ * Write .vscode/settings.json for Copilot
+ */
+async function writeCopilotSettings(
+  targetDir: string,
+  options: InitOptions,
+  result: InitResult
+): Promise<void> {
+  const vscodePath = path.join(targetDir, '.vscode');
+  const settingsPath = path.join(vscodePath, 'settings.json');
+
+  if (fs.existsSync(settingsPath) && !options.force) {
+    result.skipped.push('.vscode/settings.json');
+    return;
+  }
+
+  // Ensure .vscode/ directory exists
+  if (!fs.existsSync(vscodePath)) {
+    fs.mkdirSync(vscodePath, { recursive: true });
+  }
+
+  const content = generateCopilotSettingsJson(options);
+  fs.writeFileSync(settingsPath, content, 'utf-8');
+  result.created.files.push('.vscode/settings.json');
 }
 
 /**
@@ -2251,6 +2281,20 @@ function generateCopilotInstructionsContent(options: InitOptions): string {
     '| Refactor | architect, coder, reviewer |',
     '| Performance | performance engineer, coder |',
     '| Security | security-auditor, coder |',
+    '',
+    '## Tool Profiles',
+    '',
+    'The MCP server uses tool profiles to control which tools are exposed. Set via `CLAUDE_FLOW_TOOL_PROFILE` env var in `.vscode/mcp.json`.',
+    '',
+    '| Profile | Categories | Approx. Tools | Use Case |',
+    '|---------|-----------|---------------|----------|',
+    '| `default` | core + github | ~64 | General development (recommended) |',
+    '| `minimal` | core essentials | ~29 | Lightweight, focused tasks |',
+    '| `development` | core + github + intelligence + perf | ~130 | Full dev workflow with learning |',
+    '| `ci` | core + github + security + perf | ~85 | CI/CD pipelines |',
+    '| `full` | all categories | ~258 | Everything enabled |',
+    '',
+    'To change profile, update the `CLAUDE_FLOW_TOOL_PROFILE` value in `.vscode/mcp.json` env section.',
     '',
     '## Behavioral Rules',
     '',

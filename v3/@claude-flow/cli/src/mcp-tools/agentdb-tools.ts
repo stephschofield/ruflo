@@ -58,6 +58,7 @@ async function getBridge() {
 export const agentdbHealth: MCPTool = {
   name: 'agentdb_health',
   description: 'Get AgentDB v3 controller health status including cache stats and attestation count',
+  category: 'agentdb',
   inputSchema: {
     type: 'object',
     properties: {},
@@ -79,6 +80,7 @@ export const agentdbHealth: MCPTool = {
 export const agentdbControllers: MCPTool = {
   name: 'agentdb_controllers',
   description: 'List all AgentDB v3 controllers and their initialization status',
+  category: 'agentdb',
   inputSchema: {
     type: 'object',
     properties: {},
@@ -105,6 +107,7 @@ export const agentdbControllers: MCPTool = {
 export const agentdbPatternStore: MCPTool = {
   name: 'agentdb_pattern-store',
   description: 'Store a pattern directly via ReasoningBank controller',
+  category: 'agentdb',
   inputSchema: {
     type: 'object',
     properties: {
@@ -136,6 +139,7 @@ export const agentdbPatternStore: MCPTool = {
 export const agentdbPatternSearch: MCPTool = {
   name: 'agentdb_pattern-search',
   description: 'Search patterns via ReasoningBank controller with BM25+semantic hybrid',
+  category: 'agentdb',
   inputSchema: {
     type: 'object',
     properties: {
@@ -167,6 +171,7 @@ export const agentdbPatternSearch: MCPTool = {
 export const agentdbFeedback: MCPTool = {
   name: 'agentdb_feedback',
   description: 'Record task feedback for learning via LearningSystem + ReasoningBank controllers',
+  category: 'agentdb',
   inputSchema: {
     type: 'object',
     properties: {
@@ -200,6 +205,7 @@ export const agentdbFeedback: MCPTool = {
 export const agentdbCausalEdge: MCPTool = {
   name: 'agentdb_causal-edge',
   description: 'Record a causal edge between two memory entries via CausalMemoryGraph',
+  category: 'agentdb',
   inputSchema: {
     type: 'object',
     properties: {
@@ -237,6 +243,7 @@ export const agentdbCausalEdge: MCPTool = {
 export const agentdbRoute: MCPTool = {
   name: 'agentdb_route',
   description: 'Route a task via AgentDB SemanticRouter or LearningSystem recommendAlgorithm',
+  category: 'agentdb',
   inputSchema: {
     type: 'object',
     properties: {
@@ -266,6 +273,7 @@ export const agentdbRoute: MCPTool = {
 export const agentdbSessionStart: MCPTool = {
   name: 'agentdb_session-start',
   description: 'Start a session with ReflexionMemory episodic replay',
+  category: 'agentdb',
   inputSchema: {
     type: 'object',
     properties: {
@@ -295,6 +303,7 @@ export const agentdbSessionStart: MCPTool = {
 export const agentdbSessionEnd: MCPTool = {
   name: 'agentdb_session-end',
   description: 'End session, persist to ReflexionMemory, trigger NightlyLearner consolidation',
+  category: 'agentdb',
   inputSchema: {
     type: 'object',
     properties: {
@@ -326,6 +335,7 @@ export const agentdbSessionEnd: MCPTool = {
 export const agentdbHierarchicalStore: MCPTool = {
   name: 'agentdb_hierarchical-store',
   description: 'Store to hierarchical memory with tier (working, episodic, semantic)',
+  category: 'agentdb',
   inputSchema: {
     type: 'object',
     properties: {
@@ -364,6 +374,7 @@ export const agentdbHierarchicalStore: MCPTool = {
 export const agentdbHierarchicalRecall: MCPTool = {
   name: 'agentdb_hierarchical-recall',
   description: 'Recall from hierarchical memory with optional tier filter',
+  category: 'agentdb',
   inputSchema: {
     type: 'object',
     properties: {
@@ -399,6 +410,7 @@ export const agentdbHierarchicalRecall: MCPTool = {
 export const agentdbConsolidate: MCPTool = {
   name: 'agentdb_consolidate',
   description: 'Run memory consolidation to promote entries across tiers and compress old data',
+  category: 'agentdb',
   inputSchema: {
     type: 'object',
     properties: {
@@ -425,6 +437,7 @@ export const agentdbConsolidate: MCPTool = {
 export const agentdbBatch: MCPTool = {
   name: 'agentdb_batch',
   description: 'Batch operations on memory entries (insert, update, delete)',
+  category: 'agentdb',
   inputSchema: {
     type: 'object',
     properties: {
@@ -490,6 +503,7 @@ export const agentdbBatch: MCPTool = {
 export const agentdbContextSynthesize: MCPTool = {
   name: 'agentdb_context-synthesize',
   description: 'Synthesize context from stored memories for a given query',
+  category: 'agentdb',
   inputSchema: {
     type: 'object',
     properties: {
@@ -519,6 +533,7 @@ export const agentdbContextSynthesize: MCPTool = {
 export const agentdbSemanticRoute: MCPTool = {
   name: 'agentdb_semantic-route',
   description: 'Route an input via AgentDB SemanticRouter for intent classification',
+  category: 'agentdb',
   inputSchema: {
     type: 'object',
     properties: {

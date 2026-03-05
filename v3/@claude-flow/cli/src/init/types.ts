@@ -13,7 +13,7 @@ import path from 'path';
  * Components that can be initialized
  */
 export interface InitComponents {
-  /** Create .claude/settings.json with hooks (Claude Code only) */
+  /** Create .vscode/settings.json (Copilot) or .claude/settings.json (Claude Code) */
   settings: boolean;
   /** Copy skills to .github/skills/ (Copilot) or .claude/skills/ (Claude Code) */
   skills: boolean;
@@ -175,6 +175,10 @@ export interface MCPConfig {
   autoStart: boolean;
   /** Server port */
   port: number;
+  /** Tool profile — controls which tool categories are enabled (default, full, minimal, development, ci) */
+  toolProfile?: 'default' | 'full' | 'minimal' | 'development' | 'ci';
+  /** Additional tool categories to enable beyond the profile */
+  extraCategories?: string[];
 }
 
 /**
@@ -398,6 +402,7 @@ export const DEFAULT_INIT_OPTIONS: InitOptions = {
     flowNexus: false,
     autoStart: false,
     port: 3000,
+    toolProfile: 'default',
   },
   runtime: {
     topology: 'hierarchical-mesh',
@@ -533,6 +538,7 @@ export const FULL_INIT_OPTIONS: InitOptions = {
     flowNexus: true,
     autoStart: false,
     port: 3000,
+    toolProfile: 'full',
   },
   embeddings: {
     enabled: true,

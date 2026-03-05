@@ -9,6 +9,8 @@
  */
 
 import type { MCPTool } from './mcp-tools/types.js';
+import type { ToolCategory, ToolProfile } from './mcp-tools/tool-categories.js';
+import { getCategoriesForProfile, isValidCategory } from './mcp-tools/tool-categories.js';
 
 // Import MCP tool handlers from local package
 import { agentTools } from './mcp-tools/agent-tools.js';
@@ -26,6 +28,7 @@ import { embeddingsTools } from './mcp-tools/embeddings-tools.js';
 import { claimsTools } from './mcp-tools/claims-tools.js';
 import { securityTools } from './mcp-tools/security-tools.js';
 import { transferTools } from './mcp-tools/transfer-tools.js';
+import { dashboardTools } from './mcp-tools/dashboard-tools.js';
 // V2 Compatibility tools
 import { systemTools } from './mcp-tools/system-tools.js';
 import { terminalTools } from './mcp-tools/terminal-tools.js';
@@ -79,6 +82,8 @@ registerTools([
   ...browserTools,
   // Phase 6: AgentDB v3 controller tools
   ...agentdbTools,
+  // Dashboard tools (Task 4.3)
+  ...dashboardTools,
 ]);
 
 /**
@@ -264,10 +269,61 @@ export function validateToolInput(
   };
 }
 
+/**
+ * List tools filtered by multiple categories
+ *
+ * @param categories - Array of category names to include
+ * @returns Filtered tool list (without handlers)
+ */
+export function listMCPToolsByCategories(categories: ToolCategory[]): Array<Omit<MCPTool, 'handler'>> {
+  const categorySet = new Set<string>(categories);
+  const tools = Array.from(TOOL_REGISTRY.values());
+
+  return tools
+    .filter(t => t.category && categorySet.has(t.category))
+    .map(tool => ({
+      name: tool.name,
+      description: tool.description,
+      inputSchema: tool.inputSchema,
+      category: tool.category,
+      tags: tool.tags,
+      version: tool.version,
+      cacheable: tool.cacheable,
+      cacheTTL: tool.cacheTTL,
+    }));
+}
+
+/**
+ * List tools for a named profile
+ *
+ * @param profile - Profile name (default, full, minimal, development, ci)
+ * @returns Filtered tool list for the profile
+ */
+export function listMCPToolsForProfile(profile: ToolProfile): Array<Omit<MCPTool, 'handler'>> {
+  const categories = getCategoriesForProfile(profile);
+  return listMCPToolsByCategories(categories);
+}
+
+/**
+ * Get total tool count, optionally filtered by categories
+ */
+export function getMCPToolCount(categories?: ToolCategory[]): number {
+  if (!categories) return TOOL_REGISTRY.size;
+  const categorySet = new Set<string>(categories);
+  let count = 0;
+  TOOL_REGISTRY.forEach(tool => {
+    if (tool.category && categorySet.has(tool.category)) count++;
+  });
+  return count;
+}
+
 export default {
   callMCPTool,
   getToolMetadata,
   listMCPTools,
+  listMCPToolsByCategories,
+  listMCPToolsForProfile,
+  getMCPToolCount,
   hasTool,
   getToolCategories,
   validateToolInput,

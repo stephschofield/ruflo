@@ -581,6 +581,7 @@ function assessCommandRisk(command: string): { risk: string; level: number; warn
 export const hooksPreEdit: MCPTool = {
   name: 'hooks_pre-edit',
   description: 'Get context and agent suggestions before editing a file',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -621,6 +622,7 @@ export const hooksPreEdit: MCPTool = {
 export const hooksPostEdit: MCPTool = {
   name: 'hooks_post-edit',
   description: 'Record editing outcome for learning',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -647,6 +649,7 @@ export const hooksPostEdit: MCPTool = {
 export const hooksPreCommand: MCPTool = {
   name: 'hooks_pre-command',
   description: 'Assess risk before executing a command',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -683,6 +686,7 @@ export const hooksPreCommand: MCPTool = {
 export const hooksPostCommand: MCPTool = {
   name: 'hooks_post-command',
   description: 'Record command execution outcome',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -708,6 +712,7 @@ export const hooksPostCommand: MCPTool = {
 export const hooksRoute: MCPTool = {
   name: 'hooks_route',
   description: 'Route task to optimal agent using semantic similarity (native HNSW or pure JS)',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -880,6 +885,7 @@ export const hooksRoute: MCPTool = {
 export const hooksMetrics: MCPTool = {
   name: 'hooks_metrics',
   description: 'View learning metrics dashboard',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -923,6 +929,7 @@ export const hooksMetrics: MCPTool = {
 export const hooksList: MCPTool = {
   name: 'hooks_list',
   description: 'List all registered hooks',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {},
@@ -971,6 +978,7 @@ export const hooksList: MCPTool = {
 export const hooksPreTask: MCPTool = {
   name: 'hooks_pre-task',
   description: 'Record task start and get agent suggestions with intelligent model routing (ADR-026)',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -1057,6 +1065,7 @@ export const hooksPreTask: MCPTool = {
 export const hooksPostTask: MCPTool = {
   name: 'hooks_post-task',
   description: 'Record task completion for learning',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -1130,6 +1139,7 @@ export const hooksPostTask: MCPTool = {
 export const hooksExplain: MCPTool = {
   name: 'hooks_explain',
   description: 'Explain routing decision with full transparency',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -1187,6 +1197,7 @@ export const hooksExplain: MCPTool = {
 export const hooksPretrain: MCPTool = {
   name: 'hooks_pretrain',
   description: 'Analyze repository to bootstrap intelligence (4-step pipeline)',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -1228,6 +1239,7 @@ export const hooksPretrain: MCPTool = {
 export const hooksBuildAgents: MCPTool = {
   name: 'hooks_build-agents',
   description: 'Generate optimized agent configurations from pretrain data',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -1299,6 +1311,7 @@ export const hooksBuildAgents: MCPTool = {
 export const hooksTransfer: MCPTool = {
   name: 'hooks_transfer',
   description: 'Transfer learned patterns from another project',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -1375,6 +1388,7 @@ export const hooksTransfer: MCPTool = {
 export const hooksSessionStart: MCPTool = {
   name: 'hooks_session-start',
   description: 'Initialize a new session and auto-start daemon',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -1451,6 +1465,7 @@ export const hooksSessionStart: MCPTool = {
 export const hooksSessionEnd: MCPTool = {
   name: 'hooks_session-end',
   description: 'End current session, stop daemon, and persist state',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -1523,6 +1538,7 @@ export const hooksSessionEnd: MCPTool = {
 export const hooksSessionRestore: MCPTool = {
   name: 'hooks_session-restore',
   description: 'Restore a previous session',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -1565,6 +1581,7 @@ export const hooksSessionRestore: MCPTool = {
 export const hooksNotify: MCPTool = {
   name: 'hooks_notify',
   description: 'Send cross-agent notification',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -1596,6 +1613,7 @@ export const hooksNotify: MCPTool = {
 export const hooksInit: MCPTool = {
   name: 'hooks_init',
   description: 'Initialize hooks in project with .claude/settings.json',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -1637,6 +1655,7 @@ export const hooksInit: MCPTool = {
 export const hooksIntelligence: MCPTool = {
   name: 'hooks_intelligence',
   description: 'RuVector intelligence system status (shows REAL metrics from memory store)',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -1742,6 +1761,7 @@ export const hooksIntelligence: MCPTool = {
 export const hooksIntelligenceReset: MCPTool = {
   name: 'hooks_intelligence-reset',
   description: 'Reset intelligence learning state',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {},
@@ -1763,6 +1783,7 @@ export const hooksIntelligenceReset: MCPTool = {
 export const hooksTrajectoryStart: MCPTool = {
   name: 'hooks_intelligence_trajectory-start',
   description: 'Begin SONA trajectory for reinforcement learning',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -1803,6 +1824,7 @@ export const hooksTrajectoryStart: MCPTool = {
 export const hooksTrajectoryStep: MCPTool = {
   name: 'hooks_intelligence_trajectory-step',
   description: 'Record step in trajectory for reinforcement learning',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -1849,6 +1871,7 @@ export const hooksTrajectoryStep: MCPTool = {
 export const hooksTrajectoryEnd: MCPTool = {
   name: 'hooks_intelligence_trajectory-end',
   description: 'End trajectory and trigger SONA learning with EWC++',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -1992,6 +2015,7 @@ export const hooksTrajectoryEnd: MCPTool = {
 export const hooksPatternStore: MCPTool = {
   name: 'hooks_intelligence_pattern-store',
   description: 'Store pattern in ReasoningBank (HNSW-indexed)',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -2062,6 +2086,7 @@ export const hooksPatternStore: MCPTool = {
 export const hooksPatternSearch: MCPTool = {
   name: 'hooks_intelligence_pattern-search',
   description: 'Search patterns using REAL vector search (HNSW when available, brute-force fallback)',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -2166,6 +2191,7 @@ export const hooksPatternSearch: MCPTool = {
 export const hooksIntelligenceStats: MCPTool = {
   name: 'hooks_intelligence_stats',
   description: 'Get RuVector intelligence layer statistics',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -2343,6 +2369,7 @@ export const hooksIntelligenceStats: MCPTool = {
 export const hooksIntelligenceLearn: MCPTool = {
   name: 'hooks_intelligence_learn',
   description: 'Force immediate SONA learning cycle with EWC++ consolidation',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -2418,6 +2445,7 @@ export const hooksIntelligenceLearn: MCPTool = {
 export const hooksIntelligenceAttention: MCPTool = {
   name: 'hooks_intelligence_attention',
   description: 'Compute attention-weighted similarity using MoE/Flash/Hyperbolic',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -2790,6 +2818,7 @@ function detectWorkerTriggers(text: string): {
 export const hooksWorkerList: MCPTool = {
   name: 'hooks_worker-list',
   description: 'List all 12 background workers with status and capabilities',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -2839,6 +2868,7 @@ export const hooksWorkerList: MCPTool = {
 export const hooksWorkerDispatch: MCPTool = {
   name: 'hooks_worker-dispatch',
   description: 'Dispatch a background worker for analysis/optimization tasks',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -2939,6 +2969,7 @@ export const hooksWorkerDispatch: MCPTool = {
 export const hooksWorkerStatus: MCPTool = {
   name: 'hooks_worker-status',
   description: 'Get status of a specific worker or all active workers',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -2995,6 +3026,7 @@ export const hooksWorkerStatus: MCPTool = {
 export const hooksWorkerDetect: MCPTool = {
   name: 'hooks_worker-detect',
   description: 'Detect worker triggers from user prompt (for UserPromptSubmit hook)',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -3076,6 +3108,7 @@ async function getModelRouterInstance() {
 export const hooksModelRoute: MCPTool = {
   name: 'hooks_model-route',
   description: 'Route task to optimal Claude model (haiku/sonnet/opus) based on complexity',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -3120,6 +3153,7 @@ export const hooksModelRoute: MCPTool = {
 export const hooksModelOutcome: MCPTool = {
   name: 'hooks_model-outcome',
   description: 'Record model routing outcome for learning',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {
@@ -3153,6 +3187,7 @@ export const hooksModelOutcome: MCPTool = {
 export const hooksModelStats: MCPTool = {
   name: 'hooks_model-stats',
   description: 'Get model routing statistics',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {},
@@ -3197,6 +3232,7 @@ function analyzeComplexityFallback(task: string): number {
 export const hooksWorkerCancel: MCPTool = {
   name: 'hooks_worker-cancel',
   description: 'Cancel a running worker',
+  category: 'hooks',
   inputSchema: {
     type: 'object',
     properties: {

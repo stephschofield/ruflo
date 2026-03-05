@@ -107,16 +107,26 @@ export function generateCopilotMCPConfig(options: InitOptions): object {
 
   // Ruflo MCP server (core)
   if (config.claudeFlow) {
+    const env: Record<string, string> = {
+      npm_config_update_notifier: 'false',
+      CLAUDE_FLOW_MODE: 'v3',
+      CLAUDE_FLOW_HOOKS_ENABLED: 'true',
+      CLAUDE_FLOW_TOPOLOGY: options.runtime.topology,
+      CLAUDE_FLOW_MAX_AGENTS: String(options.runtime.maxAgents),
+      CLAUDE_FLOW_MEMORY_BACKEND: options.runtime.memoryBackend,
+    };
+
+    // Tool profile selection (controls which categories are exposed)
+    if (config.toolProfile && config.toolProfile !== 'full') {
+      env.CLAUDE_FLOW_TOOL_PROFILE = config.toolProfile;
+    }
+    if (config.extraCategories && config.extraCategories.length > 0) {
+      env.CLAUDE_FLOW_EXTRA_CATEGORIES = config.extraCategories.join(',');
+    }
+
     servers['ruflo'] = createMCPServerEntry(
       ['ruflo', 'mcp', 'start'],
-      {
-        npm_config_update_notifier: 'false',
-        CLAUDE_FLOW_MODE: 'v3',
-        CLAUDE_FLOW_HOOKS_ENABLED: 'true',
-        CLAUDE_FLOW_TOPOLOGY: options.runtime.topology,
-        CLAUDE_FLOW_MAX_AGENTS: String(options.runtime.maxAgents),
-        CLAUDE_FLOW_MEMORY_BACKEND: options.runtime.memoryBackend,
-      },
+      env,
     );
   }
 

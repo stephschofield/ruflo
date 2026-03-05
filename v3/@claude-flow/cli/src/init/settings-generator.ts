@@ -1,6 +1,6 @@
 /**
- * Settings.json Generator
- * Creates .claude/settings.json with V3-optimized hook configurations
+ * Settings Generator
+ * Creates .vscode/settings.json (Copilot) or .claude/settings.json (Claude Code)
  */
 
 import type { InitOptions, HooksConfig } from './types.js';
@@ -24,10 +24,10 @@ export function generateSettings(options: InitOptions): object {
   // Add permissions
   settings.permissions = {
     allow: [
+      'Bash(npx ruflo*)',
       'Bash(npx @claude-flow*)',
-      'Bash(npx claude-flow*)',
       'Bash(node .claude/*)',
-      'mcp__claude-flow__:*',
+      'mcp__ruflo__:*',
     ],
     deny: [
       'Read(./.env)',
@@ -35,10 +35,10 @@ export function generateSettings(options: InitOptions): object {
     ],
   };
 
-  // Add claude-flow attribution for git commits and PRs
+  // Add ruflo attribution for git commits and PRs
   settings.attribution = {
-    commit: 'Co-Authored-By: claude-flow <ruv@ruv.net>',
-    pr: '🤖 Generated with [claude-flow](https://github.com/ruvnet/claude-flow)',
+    commit: 'Co-Authored-By: ruflo <ruv@ruv.net>',
+    pr: '🤖 Generated with [ruflo](https://github.com/ruvnet/ruflo)',
   };
 
   // Note: Claude Code expects 'model' to be a string, not an object
@@ -47,9 +47,7 @@ export function generateSettings(options: InitOptions): object {
 
   // Add Agent Teams configuration (experimental feature)
   settings.env = {
-    // Enable Claude Code Agent Teams for multi-agent coordination
-    CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: '1',
-    // Claude Flow specific environment
+    // Ruflo-specific environment
     CLAUDE_FLOW_V3_ENABLED: 'true',
     CLAUDE_FLOW_HOOKS_ENABLED: 'true',
   };
@@ -158,13 +156,64 @@ export function generateSettings(options: InitOptions): object {
  * Uses local helper script for cross-platform compatibility (no npx cold-start)
  */
 function generateStatusLineConfig(_options: InitOptions): object {
-  // Claude Code pipes JSON session data to the script via stdin.
-  // Valid fields: type, command, padding (optional).
-  // The script runs after each assistant message (debounced 300ms).
   return {
     type: 'command',
     command: 'node .claude/helpers/statusline.cjs',
   };
+}
+
+/**
+ * Generate Copilot-native .vscode/settings.json content
+ * Includes editor settings, file associations, and search exclusions
+ */
+export function generateCopilotSettings(options: InitOptions): object {
+  const settings: Record<string, unknown> = {};
+
+  // File associations for agent and prompt markdown files
+  settings['files.associations'] = {
+    '*.agent.md': 'markdown',
+    '*.prompt.md': 'markdown',
+  };
+
+  // Exclude runtime data from search and file explorer
+  settings['search.exclude'] = {
+    '.claude-flow/data': true,
+    '.claude-flow/logs': true,
+    '.claude-flow/sessions': true,
+  };
+
+  settings['files.exclude'] = {
+    '.claude-flow/data': true,
+    '.claude-flow/logs': true,
+    '.claude-flow/sessions': true,
+  };
+
+  // Ruflo project metadata for VS Code
+  settings['ruflo'] = {
+    version: '3.5.0',
+    enabled: true,
+    swarm: {
+      topology: options.runtime.topology,
+      maxAgents: options.runtime.maxAgents,
+    },
+    memory: {
+      backend: options.runtime.memoryBackend,
+      enableHNSW: options.runtime.enableHNSW,
+    },
+    neural: {
+      enabled: options.runtime.enableNeural,
+    },
+  };
+
+  return settings;
+}
+
+/**
+ * Generate Copilot .vscode/settings.json as formatted string
+ */
+export function generateCopilotSettingsJson(options: InitOptions): string {
+  const settings = generateCopilotSettings(options);
+  return JSON.stringify(settings, null, 2);
 }
 
 /**
